@@ -1,0 +1,186 @@
+{% extends 'base_generic.html' %}
+
+
+{% block content %}
+
+
+<div class="row">
+    <div class="col-lg-9 col-md-8 col-sm-7">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% load poll_extras %}
+            {% if request.user|has_group:"RMA" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'test' %} aria-controls="model_eval" aria-selected="true">
+                    Latest Model</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} aria-controls="defect" aria-selected="false"
+                    id="defect_classification_navbar">Historical Data Search</a>
+            </li>
+            {% if request.user|has_group:"CQE_admin" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'cqe_configuration' %} role="tab" aria-controls="defect"
+                    aria-selected="false">CQE Configuration</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% load static %}
+<div class="tab-content" id="nav-tabContent">
+    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-tltle">
+                <h4>Documentation for Customer Risk Prediction System</h4>
+            </div>
+            <div class="card-body">
+            <div class="row">
+                <input type="button" value="Download the Documentaion File" class="btn btn-outline-danger btn-lg btn-block" onclick="window.open('download_documentation_pdf')">
+            </div>
+            </div>
+        </div>
+        <div class="card" style="width: 100%; background: #FAF7E4;">
+            <div class="card-tltle">
+                <h4>Check F2score performance</h4>
+            </div>
+                    <img class="card-img-top" src="{% static 'text/historical_onsite.png' %}" alt="Check F2score">
+            <div class="card-body">
+                <div class="row">
+                    <p>The graph will appear accordingly.</p><br>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="width: 100%;">
+            <div class="card-tltle">
+                <h4>Check prediction performance</h4>
+            </div>
+            <img class="card-img-top" src="{% static 'text/osr_dashboard.png' %}" alt="OSR dashboard">
+            <div class="card-body">
+            <div class="row">
+                <p>You get all the statistics related to previous month's prediction performance by default.<br /> You can enter the dates to query performance within a specific time period.</p>
+            </div>
+            </div>
+        </div>
+        <div class="card" style="width: 100%; background: #FAF7E4;">
+        <div class="card-tltle">
+                <h4>Change Password</h4>
+            </div>
+                    <img class="card-img-top" src="{% static 'text/change_password_1.png' %}" alt="Card image cap">
+                    <img class="card-img-top" src="{% static 'text/change_password.png' %}" alt="Card image cap">
+
+            <div class="card-body">
+
+                <div class="row">
+                    <p>You should change your password immediately.</p><br>
+                </div>
+
+            </div>
+        </div>
+        {% load poll_extras %}
+        {% if request.user|has_group:"RMA" %}
+        <div class="card" style="width: 100%;">
+        <div class="card-tltle">
+                <h4>Upload New Data</h4>
+            </div>
+                    <img class="card-img-top" src="{% static 'text/upload_new.png' %}" alt="Card image cap" style="width: 100%;"/>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Naming Conventions for "Update New Data"</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">The file name should start with "INNOLUX Customer Support Report", with .xlsx format. The file must contain sheets named 'Cases' and 'SRQs'</li>
+                            <li class="list-group-item">Inside Cases sheet, there  must be 'CaseNumber', 'Model', 'CreatedDate', 'SerialNumber', 'Symptom', 'Description', 'Diagnosis' columns.</li>
+                            <li class="list-group-item">Inside SRQs sheet, there must be 'SRNumber', 'Model', 'CreatedDate', 'SerialNumber', 'SRType', 'ErrorCode', 'InternalNotes' columns</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <img class="card-img-top" src="{% static 'text/Customer.png' %}" alt="Card image cap" style="width: 50%;"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="width: 100%; background: #FAF7E4;">
+            <div class="card-tltle">
+                    <h4>Upload Revised Data</h4>
+                </div>
+                        <img class="card-img-top" src="{% static 'text/revise.png' %}" alt="Card image cap" style="width: 100%;"/>
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Naming Conventions for "Update Revise Data"</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">The file name should start with "Latest Error Data", with .xlsx format. The file must contain a sheet named 'SRQs''</li>
+                            <li class="list-group-item">Inside SRQs sheet, there must be 'SRNumber' and 'RevisedErrorCode' columns</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <img class="card-img-top" src="{% static 'text/latest_error.png' %}" alt="Card image cap" style="width: 50%;"/>
+                    </div>
+                </div>
+                </div>
+        </div>
+        <div class="card" style="width: 100%;">
+            <div class="card-tltle">
+                    <h4>Upload Keywords Mapping Table</h4>
+                </div>
+                        <img class="card-img-top" src="{% static 'text/keyword_mapping.png' %}" alt="Card image cap" style="width: 100%;"/>
+                <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Naming Conventions for "Update Keyword"</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">The file name should be named as "Keywords Mapping Table.xlsx", with a sheet named as 'Sheet1'</li>
+                            <li class="list-group-item">Inside Sheet1, there must be 'Class', 'Rule', and 'Action' columns</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <img class="card-img-top" src="{% static 'text/Keywords.png' %}" alt="Card image cap" style="width: 50%;"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+        <div class="card" style="width: 100%; background: #FAF7E4;">
+            <div class="card-tltle">
+                <h4>Search Historical Records</h4>
+            </div>
+            <img class="card-img-top" src="{% static 'text/search_historical.png' %}" alt="Card image cap">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Logic for Search Fields</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Model Name and Error Code are one group; SRQ Number and Serial Number are another. When you finish entering either group, the fields belonging to another group will disappear for you for foolproof.</li>
+                            <li class="list-group-item">After each search, the search conditions will display accordingly on search results page. Click "Go Back" button to search again.</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <div class="card" style="width: 100%;">
+            <div class="card-tltle">
+                <h4>Search Historical Keyword Summary</h4>
+            </div>
+            <img class="card-img-top" src="{% static 'text/search_keyword.png' %}" alt="Card image cap">
+            <div class="card-body">
+
+
+            </div>
+        </div>
+        <input type="button" value="Download" onclick="window.open('download_my_pdf')">
+    </div>
+</div>
+
+
+{% endblock  %}

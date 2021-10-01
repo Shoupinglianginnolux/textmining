@@ -1,0 +1,7 @@
+djangogirls_venv/
+logfile.log
+mysite/mysite/__pycache__/
+mysite/text/__pycache__/
+mysite/mysite/settings.py
+mysite/db.sqlite3
+p2.tar

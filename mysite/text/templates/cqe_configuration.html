@@ -1,0 +1,77 @@
+{% extends 'base_generic.html' %}
+
+{% block navbar %}
+<div class="row">
+    <div class="col-9 col-sm-9 col-lg-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% load poll_extras %}
+            {% if request.user|has_group:"RMA" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'test' %} role="tab" aria-controls="model_eval"
+                    aria-selected="false">Latest Model</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} role="tab" aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            {% if request.user|has_group:"CQE_admin" %}
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'cqe_configuration' %} role="tab" aria-controls="defect"
+                    aria-selected="false">CQE Configuration</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% endblock navbar %}
+
+
+{% block content %}
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <h5 class="card-title">Data Upload</h5>
+        <div class="form-group right">
+            <form action={% url 'parse_excel' %} method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="file" class="form-control-file" name="file2upload" id="myfile"
+                            placeholder="Choose a file" required>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary  float-right romance">Update Defect Code Table</button>
+                        <button type="reset" class="btn btn-danger  float-right romance" value="reset"
+                            vOnClick="this.form.reset()">Clear</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <div class="row" style="border-radius: 4px;">
+                    <div class="col">
+                        <ul class="list-group bg-warning">
+                            <li class="list-group-item list-group-item-warning">Please make sure that the defect code mapping table is an .xlsx file, named "Defect Code Mapping Table.xlsx".</li>
+                            <li class="list-group-item list-group-item-warning">Inside the file, there is a sheet called "Sheet1", with only two columns, "Code", and "Symptom". </li>
+                            <li class="list-group-item list-group-item-warning">You can download the current defect code mapping table <a href="{% url 'export_latest_defect_mapping_table_xlsx' %}">Here</a></li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

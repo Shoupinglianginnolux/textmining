@@ -1,0 +1,49 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+<div class="container">
+  {% if not user.is_authenticated %}
+  <div class="row">
+    {% if form.errors %}
+    <p>Your username and password didn't match. Please try again.</p>
+    {% endif %}
+  </div>
+  <div class="row">
+    <p>Please input the official user account and password, which was provided through email.</p>
+  </div>
+  <div class="row">
+    <div class="col-md-8">
+      {% load static %}
+      <img src="{% static 'text/imagesbg.jpg' %}" alt="Innolux Picture" style="width: 100%; border: 0;">
+    </div>
+    <div class="col-md-4 justify-content-center align-self-center">
+      <form method="post" ContentType="application/x-www-form-urlencoded" action="{% url 'login' %}">
+        {% csrf_token %}
+        <table class="table table-no-border">
+          <tbody>
+            <tr>
+              <td scope="row" style="font-size: 18px;">{{ form.username.label_tag }}</td>
+              <td style="font-size: 18px;">{{ form.username }}</td>
+            </tr>
+            <tr>
+              <td scope="row" style="font-size: 18px;">{{ form.password.label_tag }}</td>
+              <td style="font-size: 18px;">{{ form.password }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div>
+          <input type="submit" value="Login" class="btn btn-primary btn-block"/>
+          <input type="hidden" name="next" value="{{ next }}" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<meta http-equiv="refresh" content="0;url={% url 'user_manual' %}" />
+{% endif %}
+<a href="{% url 'login_view' %}">Innolux SSO Login(Test Version)</a>
+{% endblock %}

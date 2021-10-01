@@ -1,0 +1,141 @@
+{% extends 'base_generic.html' %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_dashboard' %}"
+                                            style="white-space: normal;">自動判定結果</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr' %}"
+                                            style="white-space: normal;">F2 Score
+                                            Trend</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_trend' %}"
+                                            style="white-space: normal;">料件使用分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_usage' %}"
+                                            style="white-space: normal;">使用比例分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_unusual' %}"
+                                            style="white-space: normal;">單一料件分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_distribution' %}" style="white-space: normal;">預測實際分析</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_value_graph' %}" style="white-space: normal;">料件費用管理</a>
+                                        <a class="btn btn-outline-info btn-block my-2 active"
+                                            href="{% url 'osr_search' %}" style="white-space: normal;">預測用料查詢</a>
+                                        {% load poll_extras %}
+                                        {% if request.user|has_group:"RMA" %}
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_maintain' %}">資料維護</a>
+                                        {% endif %}
+
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Please enter search conditions</h5>
+                                            <form method="get">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <div class="form-group">
+                                                            <label id="{{ filter.form.osr_no.id_for_label }}_label">OSR No.:</label>
+                                                            {{ filter.form.osr_no }}
+                                                        </div>
+                                                        <br>
+                                                    </div>
+                                                    <div class="col">
+                                                        <a type="reset" class="btn btn-danger" href="{% url 'osr_search' %}">Clean</a>
+                                                        <button type="submit" class="btn btn-primary ">Submit</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% if query_result %}
+                                    <div class="card" id="result">
+                                        <div class="card-body">
+                                            <h4 class="card-title">OSR Query Result</h4>
+                                            <div class="align-right">
+                                                <a class="btn btn-danger" href="{% url 'export_osr_search_result' %}" role="button">Export Summary Data</a>
+                                            </div>
+                                            <table class="table table-condensed mt-3">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col" class="align-middle">OSR no.</th>
+                                                        <th scope="col" class="align-middle">Import Date</th>
+                                                        <th scope="col" class="align-middle">TV<br />Model</th>
+                                                        <th scope="col" class="align-middle">TV<br />SERIALNO</th>
+                                                        <th scope="col" class="align-middle">Problem<br />Desc</th>
+                                                        <th scope="col" class="align-middle">Error code</th>
+                                                        <th scope="col" class="align-middle">Predict<br />Parts</th>
+                                                        <th scope="col" class="align-middle">ITI parts<br /> usage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for query_obj in query_result %}
+                                                        {% for obj in query_obj.Predict_Sent_Parts %}
+                                                            {% if obj != 'nan' %}
+                                                                <tr>
+                                                                    <td class="align-middle">{{ query_obj.OSRNumber }}</td>
+                                                                    <td class="align-middle">{{ query_obj.Import_Date|date:'Y-m-d' }}</td>
+                                                                    <td class="align-middle">{{ query_obj.TV_Model }}</td>
+                                                                    <td class="align-middle">{{ query_obj.TV_SerialNo }}</td>
+                                                                    <td class="align-middle">{{ query_obj.ProblemDesc }}</td>
+                                                                    <td class="align-middle">{{ query_obj.ErrorCode }}</td>
+                                                                    <td class="align-middle">{{ obj }}</td>
+                                                                    <td class="align-middle"></td>
+                                                                </tr>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% if query_obj.Sent_Parts != 'nan' %}
+                                                            {% for obj in query_obj.Sent_Parts %}
+                                                                <tr>
+                                                                    <td class="align-middle">{{ query_obj.OSRNumber }}</td>
+                                                                    <td class="align-middle">{{ query_obj.Import_Date|date:'Y-m-d' }}</td>
+                                                                    <td class="align-middle">{{ query_obj.TV_Model }}</td>
+                                                                    <td class="align-middle">{{ query_obj.TV_SerialNo }}</td>
+                                                                    <td class="align-middle">{{ query_obj.ProblemDesc }}</td>
+                                                                    <td class="align-middle">{{ query_obj.ErrorCode }}</td>
+                                                                    <td class="align-middle"></td>
+                                                                    <td class="align-middle">{{ obj }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock  %}

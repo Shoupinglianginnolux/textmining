@@ -1,0 +1,58 @@
+2021-04-09 10:52:30,064 Starting to grab the file.
+2021-04-09 10:52:30,064 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-04-09 10:52:30,064 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-04-09 10:52:32,292 Starting to grab the file.
+2021-04-09 10:52:32,294 Using selector: SelectSelector
+2021-04-09 10:54:02,948 Starting to grab the file.
+2021-04-09 10:54:02,948 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-04-09 10:54:02,948 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-04-09 10:54:06,863 Finished saving INX_OSR IMPORT MESSAGE C 04082021-1000.xlsxin D:\D\djangovue\rma
+2021-04-09 10:54:07,350 Using selector: SelectSelector
+2021-04-09 10:54:07,902 Starting new HTTP connection (1): 10.55.14.206:4548
+2021-04-09 10:54:07,909 http://10.55.14.206:4548 "GET /restart HTTP/1.1" 308 273
+2021-04-09 10:54:07,910 Resetting dropped connection: 10.55.14.206
+2021-04-09 10:54:07,916 http://10.55.14.206:4548 "GET /restart/ HTTP/1.1" 200 22
+2021-04-09 10:54:37,959 Resetting dropped connection: 10.55.14.206
+2021-04-09 10:55:20,843 http://10.55.14.206:4548 "GET / HTTP/1.1" 200 76250
+2021-04-09 10:55:20,852 Resetting dropped connection: 10.55.14.206
+2021-04-09 10:55:20,859 http://10.55.14.206:4548 "GET /restart HTTP/1.1" 308 273
+2021-04-09 10:55:20,860 Resetting dropped connection: 10.55.14.206
+2021-04-09 10:55:20,864 http://10.55.14.206:4548 "GET /restart/ HTTP/1.1" 200 22
+2021-04-09 10:57:24,060 Starting to grab the file.
+2021-05-10 15:04:16,338 Starting to grab the file.
+2021-05-10 15:04:16,338 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-05-10 15:04:16,338 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-05-10 15:04:18,255 Starting to grab the file.
+2021-05-10 15:04:18,256 Using selector: SelectSelector
+2021-05-14 16:18:24,934 Starting to grab the file.
+2021-05-14 16:18:24,934 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-05-14 16:18:24,934 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-05-14 16:18:28,679 Finished saving INX_OSR IMPORT MESSAGE C 05132021-1000.xlsxin D:\D\djangovue\rma
+2021-05-14 16:18:28,886 Using selector: SelectSelector
+2021-05-14 16:18:29,319 Starting new HTTP connection (1): 10.55.14.206:4548
+2021-05-14 16:18:29,347 http://10.55.14.206:4548 "GET /restart HTTP/1.1" 308 273
+2021-05-14 16:18:29,349 Resetting dropped connection: 10.55.14.206
+2021-05-14 16:18:29,355 http://10.55.14.206:4548 "GET /restart/ HTTP/1.1" 200 22
+2021-05-14 16:18:59,395 Resetting dropped connection: 10.55.14.206
+2021-05-14 16:19:41,241 http://10.55.14.206:4548 "GET / HTTP/1.1" 200 43593
+2021-05-14 16:19:41,246 Resetting dropped connection: 10.55.14.206
+2021-05-14 16:19:41,253 http://10.55.14.206:4548 "GET /restart HTTP/1.1" 308 273
+2021-05-14 16:19:41,254 Resetting dropped connection: 10.55.14.206
+2021-05-14 16:19:41,260 http://10.55.14.206:4548 "GET /restart/ HTTP/1.1" 200 22
+2021-05-14 16:21:44,893 Starting to grab the file.
+2021-05-19 16:57:37,787 Starting to grab the file.
+2021-05-19 16:57:37,787 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-05-19 16:57:37,787 Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+2021-05-19 16:57:41,351 Finished saving INX_OSR IMPORT MESSAGE C 05182021-1000.xlsxin D:\D\djangovue\rma
+2021-05-19 16:57:41,523 Using selector: SelectSelector
+2021-05-19 16:57:41,944 Starting new HTTP connection (1): 10.55.14.206:4548
+2021-05-19 16:57:41,957 http://10.55.14.206:4548 "GET /restart HTTP/1.1" 308 273
+2021-05-19 16:57:41,958 Resetting dropped connection: 10.55.14.206
+2021-05-19 16:57:41,963 http://10.55.14.206:4548 "GET /restart/ HTTP/1.1" 200 22
+2021-05-19 16:58:12,009 Resetting dropped connection: 10.55.14.206
+2021-05-19 16:58:23,941 http://10.55.14.206:4548 "GET / HTTP/1.1" 200 19
+2021-05-19 16:58:23,941 Resetting dropped connection: 10.55.14.206
+2021-05-19 16:58:23,957 http://10.55.14.206:4548 "GET /restart HTTP/1.1" 308 273
+2021-05-19 16:58:23,957 Resetting dropped connection: 10.55.14.206
+2021-05-19 16:58:23,957 http://10.55.14.206:4548 "GET /restart/ HTTP/1.1" 200 22
+2021-05-19 16:58:24,142 Starting to grab the file.

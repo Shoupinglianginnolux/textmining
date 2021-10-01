@@ -1,0 +1,103 @@
+{% extends 'base_generic.html' %}
+
+{% block navbar %}
+<div class="row">
+    <div class="col-12 col-sm-12 col-lg-12">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% load poll_extras %}
+            {% if request.user|has_group:"RMA" %}
+            <li class="nav-item">
+                <a class="nav-link " href={% url 'test' %} role="tab" aria-controls="model_eval"
+                    aria-selected="false">Latest Model</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} role="tab" aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock navbar %}
+
+
+{% block content %}
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <h5 class="card-title">Oops...</h5>
+        <div class="card-body">
+            <p>An error occurred. Please check the guidelines below and try again.</p>
+            <div class="right">
+                <button class="btn btn-danger" onclick="goBack()">Go Back</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+
+
+                <div class="row bg-warning ">
+                    <div class="col-sm">
+                        {% if error_title %}
+                        <h6 class="putinmiddle text-danger font-weight-bold">{{ error_title }}</h6>
+                        {% else %}
+                        <h6 class="putinmiddle text-danger font-weight-bold">The file you uploaded does not follow the naming convention
+                        </h6>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <ul>
+                        {% if error_msg %}
+                        <li>{{ error_msg}}</li>
+                        {% else %}
+                        <li>
+                            Only .xlsx and .xls files are supported.
+                        </li>
+                        <li>
+                            In case this is a Keyword Mapping Table, the file should be named as "Keywords Mapping
+                            Table.xlsx", with a sheet named as 'Sheet1'.</p>
+                        </li>
+                        <li>
+                            In case this is a Customer Support Report, the file name should starts with "Customer
+                            Support Report", with sheets named as 'SRQs', and "Cases".</p>
+                        </li>
+                        <li>
+                            In case this is a Revised Summary Data, the file name should starts with "Latest Summary
+                            Data", with a sheet named as 'SRQs'".</p>
+                        </li>
+                        <li>
+                            In case this is a CQE Defect Code Mapping Table, the file name should starts with "Defect
+                            Mapping Table", with a sheet named as 'Sheet1'".</p>
+                        </li>
+                        <li>
+                            In case this is a OSR Special Usage Rule Table, the file name should starts with
+                            "OSR_special_usage_rule", with a sheet named as 'Sheet1'".</p>
+                        </li>
+                        <li>
+                            In case this is a ITI OSR parts usage data, the file name should starts with
+                            "ITI OSR parts usage", with a sheet named as 'Sheet1'".</p>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <br>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    function goBack() {
+      window.history.back();
+    }
+    </script>
+{% endblock content %}

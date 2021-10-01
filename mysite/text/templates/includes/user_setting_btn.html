@@ -1,0 +1,12 @@
+<ul class="list-group" style="list-style-type: none;">
+    <li class="nav-item dropdown">
+        <button class="dropdown-toggle btn-secondary btn" href="#" id="navbarDropdownMenuLink" role="button"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-user"></i>{{user.first_name}}
+        </button>
+        <div class="dropdown-menu " aria-labelledby="navbarDropdownMenuLink">
+            <a href="{% url 'password_change' %}" class="text-dark mb-6 text-decoration-none"><u>Change Password</u></a><br>
+            <a href="{% url 'logout' %}" class="text-dark last text-decoration-none"><u>Logout</u></a><br>
+        </div>
+    </li>
+</ul>

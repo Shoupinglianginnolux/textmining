@@ -1,0 +1,166 @@
+{% extends 'base_generic.html' %}
+{% block head %}
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+{% endblock head %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr_dashboard' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_dashboard' %}"  style="white-space: normal;">自動判定結果</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr' %}"  style="white-space: normal;">F2 Score
+                                            Trend</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_trend' %}"  style="white-space: normal;">料件使用分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_usage' %}"  style="white-space: normal;">使用比例分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_unusual' %}"  style="white-space: normal;">單一料件分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_distribution' %}"  style="white-space: normal;">預測實際分析</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_value_graph' %}"  style="white-space: normal;">料件費用管理</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_search' %}"  style="white-space: normal;">預測用料查詢</a>
+                                        <a class="btn btn-outline-info btn-block active my-2"
+                                            href="{% url 'osr_maintain' %}"  style="white-space: normal;">資料維護</a>
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Data Upload</h5>
+                                            <div class="form-group">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        {% if not upload_success_msg %}
+                                                        <form action={% url 'parse_excel' %} method="post"
+                                                            enctype="multipart/form-data" id="update_keyword">
+                                                            {% csrf_token %}
+                                                            <input type="file" class="form-control-file"
+                                                                name="file2upload" id="file2upload"
+                                                                placeholder="Choose a file" required>
+                                                            <button type="submit"
+                                                                class="btn btn-primary  float-right romance"
+                                                                disabled="true">Upload Mapping Table</button>
+                                                            <button type="reset"
+                                                                class="btn btn-danger  float-right romance"
+                                                                vOnClick="this.form.reset()">Clear</button>
+                                                            <small id="helpId" class="form-text text-muted">
+                                                            You can upload "Special Usage Rule", "Combo Parts", "Part Usage", "Part Price", "OSR Part Number" here. </small>
+                                                        </form>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="col-md-12">
+                                                        <p class="text-info">{{ upload_success_msg }}</p>
+                                                        <a class="btn btn-primary  float-right romance"
+                                                            href="{% url 'test' %}">Go Back</a>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">What are these mapping table for?</h4>
+                                            <table class="table table-normal-text-size my-5">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="align-middle">Affected Page</th>
+                                                        <th class="align-middle">Mapping Table</th>
+
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                    <td rowspan="3" class="align-middle">自動判定結果</td>
+                                                        <td scope="row"class="align-middle"><a href="{% url 'export_latest_special_usage_rule_xlsx' %}">Special Usage Rule</a> </td>
+
+                                                    </tr>
+                                                    <tr>
+                                                        <td scope="row"class="align-middle"><a href="{% url 'export_latest_combo_parts_list_xlsx' %}">Combo Parts</a></td>
+
+                                                    </tr>
+                                                    <tr>
+                                                        <td scope="row"class="align-middle">Part Usage <small>(*provided by ITI)</small></td>
+                                                    </tr>
+                                                    <tr>
+                                                    <tr>
+                                                    <td class="align-middle">料件費用管理</td>
+                                                        <td scope="row"class="align-middle"><a href="{% url 'export_latest_parts_price_xlsx' %}">Part Price上傳</a> </td>
+                                                    </tr>
+                                                    <tr>
+                                                    <td class="align-middle">產出的Message D</td>
+                                                        <td scope="row"class="align-middle"><a href="{% url 'export_osr_part_number_xlsx' %}">OSR Part Number</a></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <small >*Click on the mapping table name, which are marked in blue, to download the latest file as example.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#dt1").datepicker({
+            dateFormat: "yy-mm-dd",
+            minDate: "2018-11-01",
+            onSelect: function (date) {
+                var dt2 = $('#dt2');
+                var startDate = $(this).datepicker('getDate');
+                var minDate = $(this).datepicker('getDate');
+                dt2.datepicker('setDate', minDate);
+                startDate.setDate(startDate.getDate() + 730);
+                minDate.setDate(minDate.getDate() + 1);
+                //sets dt2 maxDate to the last day of 730 days window
+                dt2.datepicker('option', 'maxDate', startDate);
+                dt2.datepicker('option', 'minDate', minDate);
+            }
+        });
+        $('#dt2').datepicker({
+            dateFormat: "yy-mm-dd"
+        });
+    });
+</script>
+
+<script>
+$(document).ready(
+    function(){
+      $('input:file').change(
+        function(){
+            if ($(this).val()) {
+                $('button:submit').attr('disabled',false);
+            }
+        });
+    });
+</script>
+{% endblock  %}

@@ -1,0 +1,279 @@
+{% extends 'base_generic.html' %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr_dashboard' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block active my-2"
+                                            style="white-space: normal;" href="{% url 'osr_dashboard' %}">自動判定結果</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr' %}">F2 Score Trend</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_trend' %}">料件使用分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_usage' %}">使用比例分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_unusual' %}">單一料件分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_distribution' %}">預測實際分析</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_value_graph' %}">料件費用管理</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_search' %}">預測用料查詢</a>
+                                        {% load poll_extras %}
+                                        {% if request.user|has_group:"RMA" %}
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_maintain' %}">資料維護</a>
+                                        {% endif %}
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Please enter search conditions</h5>
+                                            <form action="" method="get">
+                                            <div class="row">
+                                                <div class="col">
+                                                        <label for="{{ filter.form.start_date.id_for_label }}"
+                                                            class='addRedStar'>Start Date</label><br>
+                                                        {{ filter.form.start_date }}<br>
+                                                        <small>Earliest date possible is 2020-12-01</small>
+                                                </div>
+                                                <div class="col">
+                                                    <label for="{{ filter.form.end_date.id_for_label }}"
+                                                        class='addRedStar'>End
+                                                        Date</label><br>
+                                                    {{ filter.form.end_date }}<br>
+                                                </div>
+                                                <div class="col">
+                                                    <a type="reset" class="btn btn-danger" href="{% url 'osr_dashboard' %}"
+                                                        >Clean</a>
+                                                    <button type="submit" class="btn btn-primary "
+                                                        >Submit</button>
+                                                </div>
+
+                                            </div>
+                                        </form>
+                                        </div>
+                                    </div>
+                                    <div class="card" style="width: 100%;">
+
+                                        <div class="card-body">
+                                        {% if card_title %}
+                                        <h5 class="card-title font-weight-bold">{{ card_title }}&nbsp;&nbsp;前月總件數：{{last_month_osr_amount}}</h5>
+                                        {% else %}
+                                        <h5 class="card-title font-weight-bold">Performance Index&nbsp;&nbsp;您所查詢期間總件數：{{last_month_osr_amount}}</h5>
+                                        {% endif %}
+                                            <div class="row">
+                                                <a name="" id="" class="btn btn-primary  d-inline-block mx-2"
+                                                {% if card_title %}
+                                                href="{% url 'export_osr_dashboard_last_month_result' %}"
+                                                {% else %}
+                                                href="{% url 'export_osr_dashboard_search_result' %}"
+                                                {% endif %}
+                                                    role="button" style="width: 22%; white-space: normal;">
+                                                    {% comment %} role="button" style="width: 18%; white-space: normal;"> {% endcomment %}
+                                                    <span>
+                                                        多判百分比<br />--<br/>
+                                                        <span style="font-size: xx-large;">{% widthratio last_month_only_oversent last_month_osr_amount 100 %} % <br />{{ last_month_only_oversent }}件</span>
+                                                    </span>
+                                                </a>
+                                                <a name="" id="" class="btn btn-primary  d-inline-block mx-2"
+                                                    {% if card_title %}
+                                                    href="{% url 'export_osr_dashboard_last_month_result' %}"
+                                                    {% else %}
+                                                    href="{% url 'export_osr_dashboard_search_result' %}"
+                                                    {% endif %}
+                                                    role="button" style="width: 22%; white-space: normal;">
+                                                    {% comment %} role="button" style="width: 18%; white-space: normal;"> {% endcomment %}
+                                                    <span>
+                                                        少判百分比<br />--<br/>
+                                                        <span style="font-size: xx-large;">{% widthratio last_month_only_undersent last_month_osr_amount 100 %} %<br />{{ last_month_only_undersent }}件</span>
+                                                    </span>
+                                                </a>
+
+                                                <a name="" id="" class="btn btn-primary  d-inline-block mx-2"
+                                                    {% if card_title %}
+                                                    href="{% url 'export_osr_dashboard_last_month_result' %}"
+                                                    {% else %}
+                                                    href="{% url 'export_osr_dashboard_search_result' %}"
+                                                    {% endif %}
+                                                    role="button" style="width: 22%; white-space: normal;">
+                                                    {% comment %} role="button" style="width: 18%; white-space: normal;"> {% endcomment %}
+                                                    <span>
+                                                        無法辨識<br />--<br/>
+                                                        <span style="font-size: xx-large;">{% widthratio last_month_not_analyzable last_month_osr_amount 100 %} %<br />{{ last_month_not_analyzable }}件</span>
+                                                    </span>
+                                                </a>
+                                                <a name="" id="" class="btn btn-primary  d-inline-block mx-2"
+                                                    {% if card_title %}
+                                                    href="{% url 'export_osr_dashboard_last_month_result' %}"
+                                                    {% else %}
+                                                    href="{% url 'export_osr_dashboard_search_result' %}"
+                                                    {% endif %}
+                                                    role="button" style="width: 22%; white-space: normal;">
+                                                    {% comment %} role="button" style="width: 18%; white-space: normal;"> {% endcomment %}
+                                                    <span>
+                                                        系統<br/>判斷成功<br />
+                                                        <span style="font-size: xx-large;">{% widthratio last_month_both_correct last_month_osr_amount 100 %} %<br />{{last_month_both_correct}}件</span>
+                                                    </span>
+                                                </a>
+                                                {% comment %} for 24 Jun 2021 demo purpose {% endcomment %}
+                                                {% comment %} <a name="" id="" class="btn btn-primary  d-inline-block mx-2"
+                                                    {% if card_title %}
+                                                    href="{% url 'export_osr_dashboard_last_month_result' %}"
+                                                    {% else %}
+                                                    href="{% url 'export_osr_dashboard_search_result' %}"
+                                                    {% endif %}
+                                                 role="button" style="width: 18%; white-space: normal;">
+                                                    <span>
+                                                        等待驗證<br />--<br/>
+                                                        <span style="font-size: xx-large;">{% widthratio last_month_others last_month_osr_amount 100 %} %<br />{{last_month_others}}件</span>
+                                                    </span>
+                                                </a> {% endcomment %}
+                                            </div>
+                                            <div class="row mt-3 ml-1">
+                                                <div class="col-8"></div>
+                                                <div class="col-4 ">
+                                                    <a class="btn btn-danger btn-block"
+                                                    {% if card_title %}
+                                                    href="{% url 'export_osr_dashboard_last_month_result' %}"
+                                                    {% else %}
+                                                    href="{% url 'export_osr_dashboard_search_result' %}"
+                                                    {% endif %}
+                                                    role="button" style="width: 80%;">Export Summary Data</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card" style="height: 550px;">
+                                        <div class="card-body" style="width: 100%;">
+                                            <div id="chartdiv" style="width:100%;  height: 500px;" ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#dt1").datepicker({
+            dateFormat: "yy-mm-dd",
+            minDate: "2020-12-01",
+            onSelect: function (date) {
+                var dt2 = $('#dt2');
+                var startDate = $(this).datepicker('getDate');
+                var minDate = $(this).datepicker('getDate');
+                dt2.datepicker('setDate', minDate);
+                startDate.setDate(startDate.getDate() + 730);
+                minDate.setDate(minDate.getDate() + 1);
+                //sets dt2 maxDate to the last day of 730 days window
+                dt2.datepicker('option', 'maxDate', startDate);
+                dt2.datepicker('option', 'minDate', minDate);
+            }
+        });
+        $('#dt2').datepicker({
+            dateFormat: "yy-mm-dd"
+        });
+    });
+</script>
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+<script>
+    am4core.useTheme(am4themes_animated);
+    var app = new Vue({
+        el: '#root',
+        delimiters: ['[[', ']]'],
+        data: {
+        },
+        methods: {
+            showToggle: function () {
+                this.isShow = !this.isShow
+                if (this.isShow) {
+                    this.btnText = "隐藏"
+                } else {
+                    this.btnText = "显示"
+                }
+            }
+        },
+        mounted() {
+
+            // Themes end
+
+            // Create chart instance
+            var chart = am4core.create("chartdiv", am4charts.PieChart);
+
+
+            // Add data
+            chart.data = [ {
+            "country": "Oversent",
+            "litres": {{ last_month_only_oversent }}
+            }, {
+            "country": "Undersent",
+            "litres": {{ last_month_only_undersent }}
+            }, {
+            "country": "Unpredictable",
+            "litres": {{ last_month_not_analyzable }}
+            }, {
+            "country": "Successfully Predicted",
+            "litres": {{ last_month_both_correct }}
+            {% comment %} For 24 Jun 2021 Demo purpose {% endcomment %}
+            {% comment %} }, {
+            "country": "Waiting for Validation",
+            "litres": {{ last_month_others }} {% endcomment %}
+            },
+            ];
+
+            // Add and configure Series
+            var pieSeries = chart.series.push(new am4charts.PieSeries());
+            pieSeries.dataFields.value = "litres";
+            pieSeries.dataFields.category = "country";
+            pieSeries.slices.template.stroke = am4core.color("#fff");
+            pieSeries.slices.template.strokeOpacity = 1;
+
+            // This creates initial animation
+            pieSeries.hiddenState.properties.opacity = 1;
+            pieSeries.hiddenState.properties.endAngle = -90;
+            pieSeries.hiddenState.properties.startAngle = -90;
+            pieSeries.labels.template.text = "{category}";
+            chart.hiddenState.properties.radius = am4core.percent(0);
+
+            pieSeries.colors.list = [
+            am4core.color("#FFA500"),
+            am4core.color("#FFFF00"),
+            am4core.color("#008000"),
+            am4core.color("#0000FF"),
+            am4core.color("#EE82EE"),
+            am4core.color("#800080")
+            ];
+            }
+    })
+</script>
+{% endblock  %}

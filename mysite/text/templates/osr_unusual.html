@@ -1,0 +1,639 @@
+{% extends 'base_generic.html' %}
+{% block head %}
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+{% endblock head %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+  <div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+      <div class="card" style="width: 100%;">
+        <div class="card-body">
+          <nav>
+            <div class="nav nav-tabs" id="nav-tab">
+              <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+              <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+              <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr' %} aria-controls="nav-osr"
+                aria-selected="true">Onsite Repair</a>
+            </div>
+          </nav>
+          <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+              <div class="row">
+                <div class="col-2">
+                  <nav class="nav justify-content-center">
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_dashboard' %}"
+                      style="white-space: normal;">自動判定結果</a>
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr' %}"
+                      style="white-space: normal;">F2 Score Trend</a>
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_trend' %}"
+                      style="white-space: normal;">料件使用分佈</a>
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_usage' %}"
+                      style="white-space: normal;">使用比例分佈</a>
+                    <a class="btn btn-outline-info btn-block my-2 active" href="{% url 'osr_unusual' %}"
+                      style="white-space: normal;">單一料件分佈</a>
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_distribution' %}"
+                      style="white-space: normal;">預測實際分析</a>
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_value_graph' %}"
+                      style="white-space: normal;">料件費用管理</a>
+                    <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_search' %}"
+                      style="white-space: normal;">預測用料查詢</a>
+                    {% load poll_extras %}
+                    {% if request.user|has_group:"RMA" %}
+                    <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                        href="{% url 'osr_maintain' %}">資料維護</a>
+                    {% endif %}
+                  </nav>
+                </div>
+                <div class="col-10">
+                  <div class="card" style="width: 100%;">
+                    <div class="card-body">
+                      <h5 class="card-title font-weight-bold">
+                      {% if search_type %}
+                      Query Result
+                      {% else %}
+                      Please enter search conditions
+                      {% endif %}
+                      </h5>
+                      <form action="" method="get">
+                        <div class="form-group row">
+                          <div class="col-sm-6">
+                            <label for="{{ filter.form.start_date.id_for_label }}" class='addRedStar'>Start
+                              Date</label><br />
+                            {{ filter.form.start_date }}
+                            <small class="form-text text-muted">Either select from calendar or input in YYYY-MM-DD format</small>
+                          </div>
+                          <div class="col-sm-6">
+                            <label for="{{ filter.form.end_date.id_for_label }}" class='addRedStar'>End
+                              Date</label><br />
+                            {{ filter.form.end_date }}
+                            <small class="form-text text-muted">Either select from calendar or input in YYYY-MM-DD format</small>
+                          </div>
+                        </div>
+                          <div class="form-group row">
+                            <div class="col-sm-6">
+                            <label for="data_source">Part 名稱</label><br />
+                            {% if search_type == 'both' %}
+                              {% for part in all_parts_list %}
+                              {{ part }}
+                              {% endfor %}
+                              {% elif search_type == 'machine_model_only'%}
+                              <p>All Parts</p>
+                              {% elif search_type == 'part_only' %}
+                              {{request.GET.part_name}}
+                              {% else %}
+                              <select class="form-control w-100" name="part_name" id="part_name" @change=partOnChange()
+                                multiple>
+                                {% for part in all_parts_list %}
+                                <option value="{{part}}">{{part}}</option>
+                                {% endfor %}
+                              </select>
+                              <small class="form-text text-muted">Hold down the ctrl button to select multiple options</small>
+                              {% endif %}
+                            </div>
+
+                            <div class="col-sm-6">
+                              <label for="{{ filter.form.machine_model.id_for_label }}">客戶機種</label><br>
+                              {% if search_type == 'both' %}
+                              {% for model in models_list %}
+                                {{ model }}
+                                {% endfor %}
+                              {% elif search_type == 'machine_model_only' %}
+                                {{ request.GET.machine_model }}
+                              {% elif search_type == 'part_only' %}
+                              <p>All Models</p>
+                              {% else %}
+                              <select class="form-control w-100" name="machine_model" id="machine_model" multiple
+                                @change=customerMachineModelSelectedChange()>
+                                {% for model in all_models_list %}
+                                <option value="{{model}}">{{model}}</option>
+                                {% endfor %}
+                              </select>
+                              <small class="form-text text-muted">Hold down the ctrl button to select multiple options</small>
+                              {% endif %}
+                            </div>
+                          </div>
+                          {% if search_type %}
+                          <a class="btn btn-danger" href="{% url 'osr_unusual' %}">Go Back</a>
+                          {% else %}
+                          <a class="btn btn-danger" href="{% url 'osr_unusual' %}">Clean</a>
+                          <button type="submit" class="btn btn-primary" :disabled="isDisabled">Submit</button>
+                          {% endif %}
+                      </form>
+                    </div>
+                  </div>
+                  {% if search_type %}
+                  <div class="card light-orange" id="result">
+                    <div class="card-body">
+                      <div class="form-group w-25">
+                        <label for="display_mode">Display Mode</label>
+                        <select class="form-control" name="display_mode" id="display_mode" @change=onChange()
+                          v-model="displayMode">
+                          <option value="week">By Week</option>
+                          <option value="month">By Month</option>
+                        </select>
+                      </div>
+                      <div class="right">
+                        <a class="btn btn-danger mx-2" href="{% url 'export_osr_trend_search_result' %}" role="button">Export Summary Data</a>
+                      </div>
+                      <h4 class="card-title">{{search_type}}</h4>
+                      <div class="row">
+                        <!-- graph for keyword summary -->
+                        {% if search_type == 'both' %}
+                        <div style="width:100%;height:500px" id="chartdiv"
+                          v-show="byWeek">
+                        </div>
+                        {% endif %}
+                        {% if search_type == 'machine_model_only' %}
+                        <div style="width:100%;height:500px" id="chartdiv1" v-show="!byWeek">
+                        </div>
+                        {% endif %}
+                        {% if search_type == 'part_only' %}
+                        <div style="width:100%;height:500px" id="chartdiv2" v-show="!byWeek">
+                        </div>
+                        {% endif %}
+                        {% if search_type == 'both' %}
+                        <div style="width:100%;height:500px" id="chartdiv3" v-show="!byWeek">
+                        </div>
+                        {% endif %}
+                        {% if search_type == 'machine_model_only' %}
+                        <div style="width:100%;height:500px" id="chartdiv4" v-show="byWeek">
+                        </div>
+                        {% endif %}
+                        {% if search_type == 'part_only' %}
+                        <div style="width:100%;height:500px" id="chartdiv5" v-show="byWeek">
+                        </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  {% elif error_msg %}
+                  <div class="card  light-orange">
+                    <div class="card-body">
+                      <h4 class="card-title">{{error_msg}}</h4>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  $(document).ready(function () {
+    $("#dt1").datepicker({
+      dateFormat: "yy-mm-dd",
+      minDate: "2018-11-01",
+      onSelect: function (date) {
+        var dt2 = $('#dt2');
+        var startDate = $(this).datepicker('getDate');
+        var minDate = $(this).datepicker('getDate');
+        dt2.datepicker('setDate', minDate);
+        startDate.setDate(startDate.getDate() + 730);
+        minDate.setDate(minDate.getDate() + 1);
+        //sets dt2 maxDate to the last day of 730 days window
+        dt2.datepicker('option', 'maxDate', startDate);
+        dt2.datepicker('option', 'minDate', minDate);
+      }
+    });
+    $('#dt2').datepicker({
+      dateFormat: "yy-mm-dd"
+    });
+  });
+</script>
+<!-- Chart code -->
+
+<!-- Resources -->
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+<script>
+am4core.useTheme(am4themes_animated);
+var app = new Vue({
+    el: '#root',
+    delimiters: ['[[', ']]'],
+    data: {
+      isShow: false,
+      displayMode: 'week',
+      byWeek: true,
+      customer_machine_model_selected: false,
+      part_selected: false,
+      isDisabled: true,
+    },
+    methods: {
+      showToggle: function () {
+        this.isShow = !this.isShow
+      },
+      onChange: function () {
+        if (this.displayMode == 'week') {
+          this.byWeek = true
+          console.log(this.byWeek);
+        } else {
+          this.byWeek = false
+          console.log(this.byWeek);
+        }
+      },
+      customerMachineModelSelectedChange() {
+        this.customer_machine_model_selected = true
+        this.isDisabled = false
+      },
+      partOnChange() {
+        this.part_selected = true
+        this.isDisabled = false
+      }
+    },
+    mounted() {
+      {% if search_type == 'both' %}
+    var chart0 = am4core.create("chartdiv", am4charts.XYChart);
+
+    chart0.data = {{graph_list_week | safe}};
+
+    // Create axes
+    var categoryAxis0 = chart0.xAxes.push(new am4charts.CategoryAxis());
+    categoryAxis0.dataFields.category = "week";
+    categoryAxis0.title.text = "";
+    categoryAxis0.renderer.grid.template.location = 0;
+    categoryAxis0.renderer.minGridDistance = 20;
+    categoryAxis0.renderer.cellStartLocation = 0.1;
+    categoryAxis0.renderer.cellEndLocation = 0.9;
+
+    var valueAxis0 = chart0.yAxes.push(new am4charts.ValueAxis());
+    valueAxis0.min = 0;
+    valueAxis0.title.text = "Percentage";
+
+
+    // Create series
+    function createSeries(field, name, stacked) {
+      var series0 = chart0.series.push(new am4charts.ColumnSeries());
+      series0.dataFields.valueY = field;
+      series0.dataFields.categoryX = "week";
+      series0.name = name;
+      series0.columns.template.tooltipText = "{name}: [bold]{valueY}[/]";
+      series0.stacked = stacked;
+      series0.columns.template.width = am4core.percent(95);
+    }
+
+    {% for i  in series_dict.values %}
+      {% for j in i %}
+        {% if forloop.first %}
+          createSeries("{{j}}", "{{j}}", false);
+          {% else %}
+          createSeries("{{j}}", "{{j}}", true);
+        {% endif %}
+
+      {% endfor %}
+    {% endfor %}
+
+    // Add legend
+    chart0.legend = new am4charts.Legend();
+    chart0.exporting.menu = new am4core.ExportMenu();
+    {% endif %}
+    {% if search_type == 'machine_model_only' %}
+    var chart1 = am4core.create('chartdiv1', am4charts.XYChart)
+    chart1.colors.step = 2;
+
+    chart1.legend = new am4charts.Legend()
+    chart1.legend.position = 'top'
+    chart1.legend.paddingBottom = 20
+    chart1.legend.labels.template.maxWidth = 95
+
+    var xAxis1 = chart1.xAxes.push(new am4charts.CategoryAxis())
+    xAxis1.dataFields.category = 'month'
+    xAxis1.renderer.cellStartLocation = 0.1
+    xAxis1.renderer.cellEndLocation = 0.9
+    xAxis1.renderer.grid.template.location = 0;
+
+    var yAxis1 = chart1.yAxes.push(new am4charts.ValueAxis());
+    yAxis1.min = 0;
+    yAxis1.renderer.inside = false;
+    yAxis1.renderer.labels.template.disabled = false;
+    yAxis1.title.text = "Ratio of parts sent";
+    yAxis1.title.fontWeight = "bold";
+
+    function createSeries1(value, name) {
+      var series1 = chart1.series.push(new am4charts.ColumnSeries())
+      series1.dataFields.valueY = value
+      series1.dataFields.categoryX = 'month'
+      series1.name = name
+
+      series1.columns.template.tooltipText = "{name}: [bold]{valueY}[/]";
+      series1.columns.template.width = am4core.percent(95);
+
+      var bullet1 = series1.bullets.push(new am4charts.LabelBullet())
+      bullet1.interactionsEnabled = false
+      bullet1.dy = 30;
+      bullet1.label.text = '{valueY}'
+      bullet1.label.fill = am4core.color('#ffffff')
+      bullet1.label.disabled = true;
+
+      return series1;
+    }
+
+    chart1.data = {{ graph_list | safe}}
+
+    {% for i in all_parts_list %}
+    createSeries1("{{i}} ", "{{i}} ");
+    {% endfor %}
+
+    function arrangeColumns1() {
+
+      var series1 = chart1.series.getIndex(0);
+
+      var w = 1 - xAxis1.renderer.cellStartLocation - (1 - xAxis1.renderer.cellEndLocation);
+      if (series1.dataItems.length > 1) {
+        var x0 = xAxis1.getX(series1.dataItems.getIndex(0), "categoryX");
+        var x1 = xAxis1.getX(series1.dataItems.getIndex(1), "categoryX");
+        var delta = ((x1 - x0) / chart1.series.length) * w;
+        if (am4core.isNumber(delta)) {
+          var middle = chart1.series.length / 2;
+
+          var newIndex = 0;
+          chart1.series.each(function (series) {
+            if (!series.isHidden && !series.isHiding) {
+              series.dummyData = newIndex;
+              newIndex++;
+            } else {
+              series.dummyData = chart1.series.indexOf(series);
+            }
+          })
+          var visibleCount = newIndex;
+          var newMiddle = visibleCount / 2;
+
+          chart1.series.each(function (series) {
+            var trueIndex = chart1.series.indexOf(series);
+            var newIndex = series.dummyData;
+
+            var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+            series.animate({
+              property: "dx",
+              to: dx
+            }, series.interpolationDuration, series.interpolationEasing);
+            series.bulletsContainer.animate({
+              property: "dx",
+              to: dx
+            }, series.interpolationDuration, series.interpolationEasing);
+          })
+        }
+      }
+    }
+    chart1.exporting.menu = new am4core.ExportMenu();
+    {% endif %}
+
+{% if search_type == 'part_only' %}
+var chart2 = am4core.create("chartdiv2", am4charts.XYChart);
+
+
+// Add data
+chart2.data = {{ graph_list |safe }};
+
+// Create axes
+var categoryAxis2 = chart2.xAxes.push(new am4charts.CategoryAxis());
+categoryAxis2.dataFields.category = "month";
+categoryAxis2.renderer.grid.template.location = 0;
+
+
+var valueAxis2 = chart2.yAxes.push(new am4charts.ValueAxis());
+valueAxis2.renderer.inside = false;
+valueAxis2.renderer.labels.template.disabled = false;
+valueAxis2.min = 0;
+valueAxis2.title.text = "Percentage of parts sent";
+valueAxis2.title.fontWeight = "bold";
+
+
+// Create series
+function createSeries2(field, name) {
+
+  // Set up series
+  var series2 = chart2.series.push(new am4charts.ColumnSeries());
+  series2.name = name;
+  series2.dataFields.valueY = field;
+  series2.dataFields.categoryX = "month";
+  series2.sequencedInterpolation = true;
+
+  // Make it stacked
+  series2.stacked = true;
+
+  // Configure columns
+  series2.columns.template.width = am4core.percent(60);
+  series2.columns.template.tooltipText = "[bold]{name}[/]\n[font-size:14px]{categoryX}: {valueY}";
+
+  // Add label
+  var labelBullet2 = series2.bullets.push(new am4charts.LabelBullet());
+  labelBullet2.label.text = "{valueY}";
+  labelBullet2.locationY = 0.5;
+  labelBullet2.label.hideOversized = true;
+  labelBullet2.label.disabled = true;
+  return series2;
+}
+{% for i in models_list %}
+createSeries2("{{i}}", "{{i}}");
+{% endfor %}
+// Legend
+chart2.legend = new am4charts.Legend();
+chart2.exporting.menu = new am4core.ExportMenu();
+{% endif %}
+{% if search_type == 'both' %}
+var chart3 = am4core.create("chartdiv3", am4charts.XYChart);
+
+    // Add data
+    chart3.data = {{graph_list | safe}};
+
+    // Create axes
+    var categoryAxis3 = chart3.xAxes.push(new am4charts.CategoryAxis());
+    categoryAxis3.dataFields.category = "month";
+    categoryAxis3.title.text = "";
+    categoryAxis3.renderer.grid.template.location = 0;
+    categoryAxis3.renderer.minGridDistance = 20;
+    categoryAxis3.renderer.cellStartLocation = 0.1;
+    categoryAxis3.renderer.cellEndLocation = 0.9;
+
+    var valueAxis3 = chart3.yAxes.push(new am4charts.ValueAxis());
+    valueAxis3.min = 0;
+    valueAxis3.title.text = "Percentage";
+
+
+    // Create series
+    function createSeries3(field, name, stacked) {
+      var series3 = chart3.series.push(new am4charts.ColumnSeries());
+      series3.dataFields.valueY = field;
+      series3.dataFields.categoryX = "month";
+      series3.name = name;
+      series3.columns.template.tooltipText = "{name}: [bold]{valueY}[/]";
+      series3.stacked = stacked;
+      series3.columns.template.width = am4core.percent(95);
+    }
+
+    {% for i  in series_dict.values %}
+      {% for j in i %}
+        {% if forloop.first %}
+          createSeries3("{{j}}", "{{j}}", false);
+          {% else %}
+          createSeries3("{{j}}", "{{j}}", true);
+        {% endif %}
+
+      {% endfor %}
+    {% endfor %}
+    // Add legend
+    chart3.legend = new am4charts.Legend();
+    chart3.exporting.menu = new am4core.ExportMenu();
+    {% endif %}
+    {% if search_type == 'machine_model_only' %}
+    var chart4 = am4core.create('chartdiv4', am4charts.XYChart)
+    chart4.colors.step = 2;
+
+    chart4.legend = new am4charts.Legend()
+    chart4.legend.position = 'top'
+    chart4.legend.paddingBottom = 20
+    chart4.legend.labels.template.maxWidth = 200
+
+    var xAxis4 = chart4.xAxes.push(new am4charts.CategoryAxis())
+    xAxis4.dataFields.category = 'week'
+    xAxis4.renderer.cellStartLocation = 0.1
+    xAxis4.renderer.cellEndLocation = 0.9
+    xAxis4.renderer.grid.template.location = 0;
+
+    var yAxis4 = chart4.yAxes.push(new am4charts.ValueAxis());
+    yAxis4.min = 0;
+    yAxis4.renderer.inside = false;
+    yAxis4.renderer.labels.template.disabled = false;
+    yAxis4.title.text = "Ratio of parts sent";
+    yAxis4.title.fontWeight = "bold";
+
+    function createSeries4(value, name) {
+      var series4 = chart4.series.push(new am4charts.ColumnSeries())
+      series4.dataFields.valueY = value
+      series4.dataFields.categoryX = 'week'
+      series4.name = name
+
+      series4.columns.template.tooltipText = "{name}: [bold]{valueY}[/]";
+      series4.columns.template.width = am4core.percent(95);
+
+      var bullet4 = series4.bullets.push(new am4charts.LabelBullet())
+      bullet4.interactionsEnabled = false
+      bullet4.dy = 30;
+      bullet4.label.text = '{valueY}'
+      bullet4.label.fill = am4core.color('#ffffff')
+      bullet4.label.disabled = true;
+      return series4;
+    }
+
+    chart4.data = {{ graph_list_week|safe }}
+
+    {% for i in all_parts_list %}
+    createSeries4("{{i}} ", "{{i}} ");
+    {% endfor %}
+
+    function arrangeColumns4() {
+
+      var series4 = chart4.series.getIndex(0);
+
+      var w = 1 - xAxis4.renderer.cellStartLocation - (1 - xAxis4.renderer.cellEndLocation);
+      if (series4.dataItems.length > 1) {
+        var x0 = xAxis4.getX(series4.dataItems.getIndex(0), "categoryX");
+        var x1 = xAxis4.getX(series4.dataItems.getIndex(1), "categoryX");
+        var delta = ((x1 - x0) / chart4.series.length) * w;
+        if (am4core.isNumber(delta)) {
+          var middle = chart4.series.length / 2;
+
+          var newIndex = 0;
+          chart4.series.each(function (series) {
+            if (!series.isHidden && !series.isHiding) {
+              series.dummyData = newIndex;
+              newIndex++;
+            } else {
+              series.dummyData = chart4.series.indexOf(series);
+            }
+          })
+          var visibleCount = newIndex;
+          var newMiddle = visibleCount / 2;
+
+          chart4.series.each(function (series) {
+            var trueIndex = chart4.series.indexOf(series);
+            var newIndex = series4.dummyData;
+
+            var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+            series4.animate({
+              property: "dx",
+              to: dx
+            }, series4.interpolationDuration, series4.interpolationEasing);
+            series4.bulletsContainer.animate({
+              property: "dx",
+              to: dx
+            }, series4.interpolationDuration, series4.interpolationEasing);
+          })
+        }
+      }
+    }
+    chart4.exporting.menu = new am4core.ExportMenu();
+    {% endif %}
+    {% if search_type == 'part_only' %}
+    var chart5 = am4core.create("chartdiv5", am4charts.XYChart);
+
+
+// Add data
+chart5.data = {{ graph_list_week | safe }};
+
+// Create axes
+var categoryAxis5 = chart5.xAxes.push(new am4charts.CategoryAxis());
+categoryAxis5.dataFields.category = "week";
+categoryAxis5.renderer.grid.template.location = 0;
+
+var valueAxis5 = chart5.yAxes.push(new am4charts.ValueAxis());
+valueAxis5.renderer.inside = false;
+valueAxis5.renderer.labels.template.disabled = false;
+valueAxis5.min = 0;
+valueAxis5.title.text = "Percentage of parts sent";
+valueAxis5.title.fontWeight = "bold";
+
+// Create series
+function createSeries5(field, name) {
+
+  // Set up series
+  var series5 = chart5.series.push(new am4charts.ColumnSeries());
+  series5.name = name;
+  series5.dataFields.valueY = field;
+  series5.dataFields.categoryX = "week";
+  series5.sequencedInterpolation = true;
+
+  // Make it stacked
+  series5.stacked = true;
+
+  // Configure columns
+  series5.columns.template.width = am4core.percent(60);
+  series5.columns.template.tooltipText = "[bold]{name}[/]\n[font-size:14px]{categoryX}: {valueY}";
+
+  // Add label
+  var labelBullet5 = series5.bullets.push(new am4charts.LabelBullet());
+  labelBullet5.label.text = "{valueY}";
+  labelBullet5.locationY = 0.5;
+  labelBullet5.label.hideOversized = true;
+  labelBullet5.label.disabled = true;
+  return series5;
+}
+
+{% for i in models_list %}
+createSeries5("{{i}}", "{{i}}");
+{% endfor %}
+
+
+// Legend
+chart5.legend = new am4charts.Legend();
+chart5.exporting.menu = new am4core.ExportMenu();
+{% endif %}
+    }
+  })
+</script>
+
+{% endblock  %}

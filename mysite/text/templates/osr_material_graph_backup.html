@@ -1,0 +1,205 @@
+{% extends 'base_generic.html' %}
+{% block head %}
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+{% endblock head %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_dashboard' %}">儀表板</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="#">F2趨勢</a>
+                                        <a class="btn btn-outline-info btn-block active my-2" href="{% url 'osr_material_graph' %}">料件圖</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="#">趨勢</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="#">使用狀況</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_unusual' %}">異常狀況</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_distribution' %}">分佈圖</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_value_graph' %}">金額</a>
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_search' %}">細項查詢</a>
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Please enter search conditions</h5>
+                                            <div class="row">
+                                                <div class="col">
+                                                    <form action="" method="post">
+                                                        {% csrf_token %}
+                                                        <label for="{{ filter.form.start_date.id_for_label }}"
+                                                            class='addRedStar'>Start Date</label><br>
+                                                        {{ filter.form.start_date }}<br>
+                                                        <label for="data_source">Part 名稱</label> <br>
+                                                        {{ filter.form.part}}
+                                                        <br>
+                                                </div>
+                                                <div class="col">
+                                                    <label for="{{ filter.form.end_date.id_for_label }}"
+                                                        class='addRedStar'>End
+                                                        Date</label><br>
+                                                    {{ filter.form.end_date }}<br>
+                                                    <label
+                                                        for="{{ filter.form.machine_model.id_for_label }}">客戶機種</label><br>
+                                                    {{ filter.form.machine_model }}
+                                                </div>
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                      <label for="display_mode">Display Mode</label>
+                                                      <select class="form-control" name="display_mode" id="display_mode">
+                                                        <option>By Week</option>
+                                                        <option>By Month</option>
+                                                      </select>
+                                                    </div>
+                                                    <button type="reset" class="btn btn-danger"
+                                                        v-on:click="showToggle">Clean</button>
+                                                    <button type="submit" class="btn btn-primary "
+                                                        v-on:click="showToggle">Submit</button>
+                                                </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card" id="result" v-show="isShow">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Title</h4>
+                                            <div class="row">
+                                                <!-- graph for keyword summary -->
+                                                <div style="width:100%;height:300px">
+                                                    <canvas id="layanan_bar"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $("#dt1").datepicker({
+                dateFormat: "yy-mm-dd",
+                minDate: "2018-11-01",
+                onSelect: function (date) {
+                    var dt2 = $('#dt2');
+                    var startDate = $(this).datepicker('getDate');
+                    var minDate = $(this).datepicker('getDate');
+                    dt2.datepicker('setDate', minDate);
+                    startDate.setDate(startDate.getDate() + 730);
+                    minDate.setDate(minDate.getDate() + 1);
+                    //sets dt2 maxDate to the last day of 730 days window
+                    dt2.datepicker('option', 'maxDate', startDate);
+                    dt2.datepicker('option', 'minDate', minDate);
+                }
+            });
+            $('#dt2').datepicker({
+                dateFormat: "yy-mm-dd"
+            });
+        });
+    </script>
+    <script>
+        var app = new Vue({
+            el: '#root',
+            delimiters: ['[[', ']]'],
+            data: {
+                btnText: "隐藏",
+                isShow: false
+            },
+            methods: {
+                showToggle: function () {
+                    this.isShow = !this.isShow
+                    if (this.isShow) {
+                        this.btnText = "隐藏"
+                    } else {
+                        this.btnText = "显示"
+                    }
+                }
+            }
+        })
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+<script>
+  {% autoescape off %}
+  new Chart(document.getElementById("chartjs-1"),{"type":"bar","data":{"labels":["January","February","March","April","May","June","July"],"datasets":[{"label":"My First Dataset","data":[65,59,80,81,56,55,40],"fill":false,"backgroundColor":["rgba(255, 99, 132, 0.2)","rgba(255, 159, 64, 0.2)","rgba(255, 205, 86, 0.2)","rgba(75, 192, 192, 0.2)","rgba(54, 162, 235, 0.2)","rgba(153, 102, 255, 0.2)","rgba(201, 203, 207, 0.2)"],"borderColor":["rgb(255, 99, 132)","rgb(255, 159, 64)","rgb(255, 205, 86)","rgb(75, 192, 192)","rgb(54, 162, 235)","rgb(153, 102, 255)","rgb(201, 203, 207)"],"borderWidth":1}]},"options":{"scales":{"yAxes":[{"ticks":{"beginAtZero":true}}]}}});
+        $(function () {
+            var ctx_3 = document.getElementById("layanan_bar").getContext('2d');
+            var data = {
+                datasets: [{
+                    data: {{analytics_to_display_list_data}},
+                    backgroundColor: [
+                        '#3c8dbc',
+                        '#f56954',
+                        '#f39c12',
+                        '#ffff33',
+                        '#66BD92',
+                    ],
+
+                    label: 'SRQ keywords appeared',
+                }],
+                labels:{{analytics_to_display_list_cat}}
+            };
+
+            var myBarChart = new Chart(ctx_3, {
+                type: 'bar',
+                data: data,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: false
+                    },
+                    title: {
+                        text: 'SRQ Keyword Summary',
+                        display: true,
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Class'
+                        }
+                        }],
+                    }
+                }
+            });
+            </script>
+            {% endautoescape %}
+
+    {% endblock  %}

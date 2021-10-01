@@ -1,0 +1,305 @@
+{% extends 'base_generic.html' %}
+{% block navbar %}
+<div class="row">
+    <div class="col-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'test' %} role="tab" aria-controls="model_eval"
+                    aria-selected="false">Latest Model</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} role="tab" aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% endblock navbar %}
+
+{% block content %}
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <h5 class="card-title">Data Upload</h5>
+        <div class="form-group right">
+            <div class="row">
+                <div class="col-md-6">
+                {% if not upload_success_msg %}
+                    <form action={% url 'parse_excel' %} method="post" enctype="multipart/form-data"
+                        id="update_keyword">
+                        {% csrf_token %}
+                        <input type="file" class="form-control-file" name="file2upload" id="file2upload"
+                            placeholder="Choose a file" required>
+
+                </div>
+
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary  float-right romance" id="myBtn" disabled="true">Update
+                        New Data</button>
+                    <button type="submit" class="btn btn-secondary  float-right romance" disabled="true">Update Revise
+                        Data</button>
+                    <button type="reset" class="btn btn-danger  float-right romance"
+                        vOnClick="this.form.reset()">Clear</button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="col-md-12">
+                <p class="text-info">{{ upload_success_msg }}</p>
+                    <a class="btn btn-primary  float-right romance" href="{% url 'test' %}">Go Back</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                        <a class="nav-item nav-link active" id="nav-home-tab" href={% url 'model_classification' %}
+                            aria-selected="true">Error Code Classification</a>
+                        <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'keyword_summary' %}
+                            aria-selected="false">Keyword Summary</a>
+
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                        <div class="card" style="width: 100%;">
+                            <div class="card-body">
+                        <div class="row bg-warning">
+                            <div class="col-sm" style="display: block">
+                                {% if result %}
+                                {% load poll_extras %}
+                                <h6 class="putinmiddle">Prediction Accuracy: {{ result.accuracy|percentage }} (Model Update date:
+                                    {{result.date}})</h6>{% endif %}
+                            </div>
+                            <div class="col-sm">
+                                <a class="btn btn-danger float-right romance upanddown"
+                                    {% if c or d %} href="{% url 'export_error' %}" {% endif %}
+                                    >Export Error Data</a>
+                                <a class="btn btn-danger  float-right romance upanddown"
+                                    {% if c or d %} href="{% url 'export' %}" {% endif %}
+                                    >Export Summary Data</a>
+                            </div>
+                        </div>
+                        {% comment %} {% if c and d %} {% endcomment %}
+
+                        {% for item in c %}
+                        <div class="row light-orange">
+                            <div class="col-md-8 vertical_center">
+                                <h6>Count of {{item.Model}} by SRQ Error Code</h6>
+                                <div id="chartdiv{{item.Model|to_and}}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="row">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>{{item.Model}}</th>
+                                                <th class="fit">Q'ty</th>
+                                                <th>Percentage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for e in item.statistic %}
+                                            <tr>
+                                                <td>{{ e.ErrorCode }}</td>
+                                                <td>{{ e.error_count }}</td>
+                                                {% load poll_extras %}
+                                                {% load mathfilters %}
+                                                <td>{{ e.error_count|div:item.error_count_sum|percentage }}</td>
+                                                {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    <p>&nbsp; </p><br>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% for item in d %}
+                        <div class="row light-blue">
+                            <div class="col-md-8 vertical_center">
+                                <h6>Count of {{item.Model}} by Cases Error Code</h6>
+                                <div id="chartdiv{{item.Model|to_and}}_case"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="row">
+                                    <p>&nbsp;</p><br>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>{{item.Model}}</th>
+                                                <th class="fit">Q'ty</th>
+                                                <th>Percentage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for e in item.statistic %}
+                                            <tr>
+                                                <td>{{ e.PredictErrorCode }}</td>
+                                                <td>{{ e.error_count }}</td>
+                                                {% load poll_extras %}
+                                                {% load mathfilters %}
+                                                <td>{{ e.error_count|div:item.error_count_sum|percentage }}</td>
+                                                {% endfor %}
+                                        </tbody>
+                                    </table>
+                                    <p>&nbsp; </p><br>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% comment %} {% endif %} {% endcomment %}
+                        </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <h5 class="text-info">Processing...Please wait ...</h5>
+    </div>
+</div>
+<div id="myModal1" class="modal">
+    <div class="modal-content">
+        <h5 class="text-info">Processing...Please wait ...</h5>
+
+    </div>
+</div>
+
+<script>
+// Get the modal
+var modal1 = document.getElementById("myModal1");
+
+// Get the button that opens the modal
+var btn1 = document.getElementById("nav-keyword-tab");
+
+
+// When the user clicks the button, open the modal
+btn1.onclick = function() {
+  modal1.style.display = "block";
+}
+</script>
+{% if not upload_success_msg %}
+<script>
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+
+// When the user clicks the button, open the modal
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+</script>
+{% endif %}
+<script>
+$(document).ready(
+    function(){
+
+      $('input:file').change(
+        function(){
+            if ($(this).val()) {
+                $('button:submit').attr('disabled',false);
+            }
+        });
+    });
+</script>
+{% if c or d %}
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+
+<!-- Chart code -->
+<script>
+am4core.ready(function() {
+ // Themes begin
+    am4core.useTheme(am4themes_animated);
+    // Themes end
+    {% for item in c %}
+        // Create chart instance
+        var chart{{item.Model|to_and}} = am4core.create("chartdiv{{item.Model|to_and}}", am4charts.PieChart);
+    {% endfor %}
+    {% for item in d %}
+        // Create chart instance
+        var chart{{item.Model|to_and}}_case = am4core.create("chartdiv{{item.Model|to_and}}_case", am4charts.PieChart);
+    {% endfor %}
+
+    // Add data
+    {% autoescape off %}
+
+    {% for item in c %}
+        chart{{ item.Model|to_and }}.data = [
+            {% for i in item.statistic %}
+                {{ i }},
+            {% endfor %}];
+    {% endfor %}
+
+
+
+    {% for item in d %}
+        chart{{ item.Model|to_and }}_case.data = [
+            {% for i in item.statistic %}
+                {{ i }},
+            {% endfor %}];
+    {% endfor %}
+
+    {% endautoescape %}
+
+    {% for item in c %}
+
+    // Add and configure Series
+    var pieSeries{{item.Model|to_and}} = chart{{item.Model|to_and}}.series.push(new am4charts.PieSeries());
+    pieSeries{{item.Model|to_and}}.dataFields.value = "error_count";
+    pieSeries{{item.Model|to_and}}.dataFields.category = "ErrorCode";
+    pieSeries{{item.Model|to_and}}.slices.template.stroke = am4core.color("#fff");
+    pieSeries{{item.Model|to_and}}.slices.template.strokeOpacity = 1;
+    pieSeries{{item.Model|to_and}}.labels.template.fontSize = 10;
+    // This creates initial animation
+    pieSeries{{item.Model|to_and}}.hiddenState.properties.opacity = 1;
+    pieSeries{{item.Model|to_and}}.hiddenState.properties.endAngle = -90;
+    pieSeries{{item.Model|to_and}}.hiddenState.properties.startAngle = -90;
+
+    chart{{item.Model|to_and}}.hiddenState.properties.radius = am4core.percent(0);
+    chart{{item.Model|to_and}}.exporting.menu = new am4core.ExportMenu();
+
+    {% endfor %}
+
+    {% for item in d %}
+    // Add and configure Series
+    var pieSeries{{item.Model|to_and}}_case = chart{{item.Model|to_and}}_case.series.push(new am4charts.PieSeries());
+    pieSeries{{item.Model|to_and}}_case.dataFields.value = "error_count";
+    pieSeries{{item.Model|to_and}}_case.dataFields.category = "PredictErrorCode";
+    pieSeries{{item.Model|to_and}}_case.slices.template.stroke = am4core.color("#fff");
+    pieSeries{{item.Model|to_and}}_case.slices.template.strokeOpacity = 1;
+    pieSeries{{item.Model|to_and}}_case.labels.template.fontSize = 10;
+    // This creates initial animation
+    pieSeries{{item.Model|to_and}}_case.hiddenState.properties.opacity = 1;
+    pieSeries{{item.Model|to_and}}_case.hiddenState.properties.endAngle = -90;
+    pieSeries{{item.Model|to_and}}_case.hiddenState.properties.startAngle = -90;
+
+    chart{{item.Model|to_and}}_case.hiddenState.properties.radius = am4core.percent(0);
+    chart{{item.Model|to_and}}_case.exporting.menu = new am4core.ExportMenu();
+    {% endfor %}
+    });
+ // end am4core.ready()
+</script>
+{% endif %}
+
+{% endblock %}

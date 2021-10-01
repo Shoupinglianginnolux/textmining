@@ -1,0 +1,703 @@
+{% extends 'base_generic.html' %}
+
+{% block navbar %}
+
+<div class="row">
+    <div class="col-9 col-sm-9 col-lg-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% load poll_extras %}
+            {% if request.user|has_group:"RMA" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'test' %} role="tab" aria-controls="model_eval"
+                    aria-selected="true">Latest Model</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'defect_classification' %} role="tab" aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            {% if request.user|has_group:"CQE_admin" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'cqe_configuration' %} role="tab" aria-controls="defect"
+                    aria-selected="false">CQE Configuration</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-sm-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% endblock navbar %}
+
+
+{% block content %}
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab">
+                        <a class="nav-item nav-link active" id="nav-home-tab" href={% url 'defect_classification' %}
+                            aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                        <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                            aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                        <a class="nav-item nav-link" id="nav-osr-tab" href={% url 'osr_dashboard' %} aria-controls="nav-osr"
+                            aria-selected="true">Onsite Repair</a>
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                        <div class="card" style="width: 100%;">
+                            <div class="card-body">
+                                <h5 class="card-title">Advanced Search</h5>
+                                <form method="get" id="myform" autocomplete="off"
+                                    action="{% url 'historical_errorcode_result' %}">
+                                    <div class="row">
+                                        <div class="col-md-3 col-lg col-sm-6">
+                                            {% if firstload %}
+                                            <label for="{{ filter.form.start_date.id_for_label }}">Start
+                                                Date</label><br>
+                                            {{ filter.form.start_date }}<br>
+                                            <small>Either select from calendar or input in YYYY-MM-DD format</small>
+                                            {% elif request.GET.start_date %}
+                                            <label for="{{ filter.form.start_date.id_for_label }}">Start
+                                                Date</label><br>
+                                            <p>{{ request.GET.start_date }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-3 col-lg col-sm-6">
+                                            {% if firstload %}<label for="{{ filter.form.end_date.id_for_label }}">End
+                                                Date</label><br>
+                                            {{ filter.form.end_date }}<br>
+                                            <small>Either select from calendar or input in YYYY-MM-DD format</small>
+                                            {% elif request.GET.end_date %}
+                                            <label for="{{ filter.form.end_date.id_for_label }}">End Date</label><br>
+                                            <p>{{ request.GET.end_date }}</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3 col-lg col-sm-6">
+                                            {% if firstload %}
+                                            <label for="{{ filter.form.SRNumber.id_for_label }}"
+                                                id="{{ filter.form.SRNumber.id_for_label}}_label">SRQ Number</label><br>
+                                            {{ filter.form.SRNumber }}
+                                            {% elif request.GET.SRNumber %}
+                                            <label for="{{ filter.form.SRNumber.id_for_label }}"
+                                                id="{{ filter.form.SRNumber.id_for_label}}_label">SRQ Number</label><br>
+                                            <p>{{ request.GET.SRNumber }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-3 col-lg col-sm-6">
+                                            {% if request.GET.errorCode %}
+                                            <label for="{{ filter.form.errorCode.id_for_label }}"
+                                                id="{{ filter.form.errorCode.id_for_label}}_label">Error Code</label>
+                                            <p>{{ request.GET.errorCode }}</p>
+                                            {% elif firstload %}
+                                            <label for="{{ filter.form.errorCode.id_for_label }}"
+                                                id="{{ filter.form.errorCode.id_for_label}}_label">Error
+                                                Code</label><br>
+                                            {{ filter.form.errorCode }}
+                                            <br>
+                                            {% endif %}
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3 col-lg col-sm-6">{% if request.GET.SerialNumber %}
+                                            <label for="{{ filter.form.SerialNumber.id_for_label }}"
+                                                id="{{ filter.form.SerialNumber.id_for_label}}_label">Serial
+                                                Number</label>
+                                            <p>{{ request.GET.SerialNumber }}</p>
+                                            {% elif firstload %}
+                                            <label for="{{ filter.form.SerialNumber.id_for_label }}"
+                                                id="{{ filter.form.SerialNumber.id_for_label}}_label">Serial
+                                                Number</label><br>
+                                            {{ filter.form.SerialNumber }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-3 col-lg col-sm-6">{% if request.GET.Model %}
+                                            <label for="{{ filter.form.Model.id_for_label }}"
+                                                id="{{ filter.form.Model.id_for_label}}_label">Model Name</label><br>
+                                            <p>{{ request.GET.Model }}</p>
+                                            {% elif firstload %}
+                                            <label for="{{ filter.form.Model.id_for_label }}"
+                                                id="{{ filter.form.Model.id_for_label}}_label">Model Name</label><br>
+                                            {{ filter.form.Model }}
+                                            {% endif %}
+                                        </div>
+
+
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3 col-lg col-sm-6">
+                                            <label for="{{ filter.form.data_source_type.id_for_label }}"
+                                                class='addRedStar'>
+                                                Data Source
+                                            </label><br>
+                                            {% if firstload %}
+                                            <select name="data_source_type" id="data_source_type">
+                                                <option value="SRQ">SRQs</option>
+                                                <option value="Cases">Cases</option>
+                                                <option value="both">both</option>
+                                            </select>
+                                            {% else %}
+                                            <p>{{ data_source }}</p>
+                                            {% endif %}
+                                            <br></div>
+
+                                        <div class="col-md-3 col-lg col-sm-6">
+                                            {% if firstload %}
+                                            <input type="reset" class="btn btn-danger" value="Clear" id="reset"></input>
+                                            <button type="submit" class="btn btn-primary " id="myBtn">Submit</button>
+                                            {% else %}
+                                            <button type="submit" class="btn btn-primary " id="myBtn"
+                                                hidden>Submit</button>
+                                            <a href="{% url 'defect_classification' %}" class="btn btn-danger">Go
+                                                Back</a>
+                                            {% endif %}</div>
+                                    </div>
+                                </form>
+
+                            <div class="row bg-warning ">
+                                <div class="col-sm">
+                                    <a class="btn btn-danger float-right romance upanddown"
+                                        {% if error_count_sum  == 0 and data_source == 'SRQs' or firstload %}
+                                        {% else %}
+                                        href="{% url 'export_historical_errorcode_error_data' %}" {% endif %}>Export
+                                        Error Data
+                                    </a>
+                                    <a class="btn btn-danger float-right romance upanddown"
+                                        {% if error_count_sum  == 0 and data_source == 'SRQs' or firstload %}
+                                        {% elif error_count_sum != 0 or cases_error_count_sum != 0 %}
+                                        href="{% url 'export_historical_error_data' %}"
+                                         {% endif %}>Export Summary Data
+                                    </a>
+                                </div>
+                            </div>
+
+                            {% load poll_extras %}
+                            {% if data_source == 'SRQs' %}
+                                {% if search_type == 'model' or search_type == 'general' or search_type == 'errorcode' %}
+                                <div class="row  light-orange">
+                                    <div class="col-md-8 vertical_center">
+                                        <h4>SRQ query result</h4>
+                                        <div id="chartdiv_srq"></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        {% if not request.GET.SerialNumber and not request.GET.SRNumber %}
+                                        <div class="row">
+                                            {% if request.GET.errorCode %}
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{{request.GET.errorCode}}</th>
+                                                        <th>Q'ty</th>
+                                                        <th>Percentage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tbody>
+                                                    {% for e in srq_statistic_df_dict %}
+                                                    <tr>
+                                                        <td>{{ e.Model }}</td>
+                                                        <td>{{ e.size }}</td>
+                                                        {% load poll_extras %}
+                                                        {% load mathfilters %}
+                                                        <td>{{ e.size|div:e.error_count_sum|percentage}}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                            </table>
+                                            <p>&nbsp; </p><br>
+                                            {% elif search_type == 'general' or search_type == 'model' %}
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        {% if search_type == 'general' %}
+                                                        <th>All models</th>
+                                                        {% else %}
+                                                        <th>{{ request.GET.Model }}</th>
+                                                        {% endif %}
+                                                        <th>Q'ty</th>
+                                                        <th>Percentage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for e in srq_statistic_df_dict %}
+                                                    <tr>
+                                                        <td>{{ e.ErrorCode }}</td>
+                                                        <td>{{ e.size }}</td>
+                                                        {% load poll_extras %}
+                                                        {% load mathfilters %}
+                                                        <td>{{ e.size|div:e.error_count_sum|percentage}}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% elif data_source == 'both' %}
+                                {% if search_type == 'model' or search_type == 'general' or search_type == 'errorcode' %}
+                                <div class="row  light-orange">
+                                    <div class="col-md-8 vertical_center">
+                                        <h4>SRQ query result</h4>
+                                        <div id="chartdiv_srq"></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        {% if not request.GET.SerialNumber and not request.GET.SRNumber %}
+                                        <div class="row">
+                                            {% if request.GET.errorCode %}
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{{request.GET.errorCode}}</th>
+                                                        <th>Q'ty</th>
+                                                        <th>Percentage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tbody>
+                                                    {% for e in srq_statistic_df_dict %}
+                                                    <tr>
+                                                        <td>{{ e.Model }}</td>
+                                                        <td>{{ e.size }}</td>
+                                                        {% load poll_extras %}
+                                                        {% load mathfilters %}
+                                                        <td>{{ e.size|div:e.error_count_sum|percentage}}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                            </table>
+                                            <p>&nbsp; </p><br>
+                                            {% elif search_type == 'general' or search_type == 'model' %}
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        {% if search_type == 'general' %}
+                                                        <th>All models</th>
+                                                        {% else %}
+                                                        <th>{{ request.GET.Model }}</th>
+                                                        {% endif %}
+                                                        <th>Q'ty</th>
+                                                        <th>Percentage</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for e in srq_statistic_df_dict %}
+                                                    <tr>
+                                                        <td>{{ e.ErrorCode }}</td>
+                                                        <td>{{ e.size }}</td>
+                                                        {% load poll_extras %}
+                                                        {% load mathfilters %}
+                                                        <td>{{ e.size|div:e.error_count_sum|percentage}}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                            {% if request.GET.SRNumber or request.GET.SerialNumber %}
+                            <div class="row light-orange">
+                                <!-- prediction result -->
+                                <div class="col-md-12">
+                                    {% if not filter.qs %}
+                                    <p>No SRQ found with the specified conditions.</p>
+                                    {% else %}
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>SRQ Number</th>
+                                                <th>SRType</th>
+                                                <th>CreatedDate</th>
+                                                <th>Model</th>
+                                                <th>SerialNumber</th>
+                                                <th>Error Code</th>
+                                                <th>InternalNotes</th>
+                                                <th>PredictErrorCode</th>
+                                            </tr>
+                                        </thead>
+                                        {% for item in filter.qs %}
+
+                                        <tr>
+                                            <td class="fit">{{item.SRNumber}}</td>
+                                            <td>{{ item.SRType }}</td>
+                                            <td>{{ item.CreatedDate }}</td>
+                                            <td>{{ item.Model }}</td>
+                                            <td>{{ item.SerialNumber }}</td>
+                                            <td class="new-line">{{item.ErrorCode}}</td>
+                                            <td class="">{{item.InternalNotes}}</td>
+                                            <td>{{ item.PredictErrorCode }}</td>
+                                        </tr>
+                                        {% endfor %}
+
+                                    </table>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if cases_chart_data %}
+                            <div class="row light-blue">
+                                <div class="col-md-8  vertical_center">
+                                    <h4>Cases query result</h4>
+                                    <!-- graph for keyword summary -->
+                                    <div id="chartdiv_cases"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="row">
+                                        {% if request.GET.errorCode %}
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>{{ request.GET.errorCode }}</th>
+                                                    <th>Q'ty</th>
+                                                    <th>Percentage</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {% for item in cases_a %}
+                                                {% for e in item.statistic %}
+                                                <tr>
+                                                    <td>{{ e.Model }}</td>
+                                                    <td>{{ e.error_count }}</td>
+                                                    {% load mathfilters %}
+                                                    {% load poll_extras %}
+                                                    <td>{{ e.error_count|div:cases_error_count_sum|percentage }}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        {% else %}
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>{{ request.GET.Model }}</th>
+                                                    <th>Q'ty</th>
+                                                    <th>Percentage</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {% for item in d %}
+                                                {% for e in item.statistic %}
+                                                <tr>
+                                                    <td>{{ e.PredictErrorCode }}</td>
+                                                    <td>{{ e.error_count }}</td>
+                                                    {% load mathfilters %}
+                                                    {% load poll_extras %}
+                                                    <td>{{ e.error_count|div:item.error_count_sum|percentage }}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% endif %}
+                            {% if request.GET.SerialNumber and cases_filter %}
+                            <div class="row light-blue">
+                                <!-- prediction result -->
+                                <div class="col-md-12">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Case Number</th>
+                                                <th>Symptom</th>
+                                                <th>Created Date</th>
+                                                <th>Model</th>
+                                                <th>Serial Number</th>
+                                                <th>Error Code</th>
+                                                <th>Discription</th>
+                                                <th>Diagnosis</th>
+                                            </tr>
+                                        </thead>
+                                        {% for item in cases_filter.qs %}
+
+                                        <tr>
+                                            <td class="fit">{{item.CaseNumber}}</td>
+                                            <td>{{ item.Symptom }}</td>
+                                            <td>{{ item.CreatedDate }}</td>
+                                            <td>{{ item.Model }}</td>
+                                            <td>{{ item.SerialNumber }}</td>
+                                            <td class="new-line">{{item.PredictErrorCode}}</td>
+                                            <td class="">{{item.Discription}}</td>
+                                            <td>{{ item.Diagnosis }}</td>
+                                        </tr>
+                                        {% endfor %}
+
+                                    </table>
+
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if firstload %}
+                            <div class="row">
+                                <p class="text-primary">{{ firstload }}&nbsp;</p>
+                                <br>
+                            </div>
+                            {% elif error_count_sum  == 0 and cases_error_count_sum == 0 %}
+                            <div class="row">
+                                <p class="text-danger">
+                                    <br>There is no data with the given conditions.</p>
+                            </div>
+                            {% elif not srq_chart_data  and not cases_chart_data and not request.GET.SRNumber and not request.GET.SerialNumber %}
+                            <div class="row">
+                                <p>Query completed. Please download the result.</p>
+                            </div>
+                            {% elif error_count_sum  == 0 %}
+
+                            <div class="row">
+                                <p class="text-danger">
+                                    <br>There is no SRQ data with the given conditions.</p>
+                            </div>
+                            {% elif cases_error_count_sum  == 0 %}
+
+                            <div class="row">
+                                <p class="text-danger">
+                                    <br>There is no Case data with the given conditions.</p>
+                            </div>
+
+                            {% endif %}
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <h5 class="text-info">Processing...Please wait ...</h5>
+    </div>
+</div>
+<script>
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    var btn = document.getElementById("myBtn");
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+    </script>
+    {% if firstload %}
+    <script>
+        $(document).ready(function () {
+            $('#reset').click(function(){
+                $('#{{ filter.form.Model.id_for_label }}').removeAttr('hidden');
+                $('#{{ filter.form.Model.id_for_label }}_label').removeAttr('hidden');
+                $('#{{ filter.form.errorCode.id_for_label }}').removeAttr('hidden');
+                $('#{{ filter.form.errorCode.id_for_label }}_label').removeAttr('hidden');
+                $('#{{ filter.form.SRNumber.id_for_label }}').removeAttr('hidden');
+                $('#{{ filter.form.SRNumber.id_for_label }}_label').removeAttr('hidden');
+                $('#{{ filter.form.SerialNumber.id_for_label }}').removeAttr('hidden');
+                $('#{{ filter.form.SerialNumber.id_for_label }}_label').removeAttr('hidden');
+            });
+            if ($('#{{ filter.form.Model.id_for_label }}').val().length !== 0) {
+                $('#{{ filter.form.SRNumber.id_for_label }}').attr('hidden');
+                $('#{{ filter.form.SerialNumber.id_for_label }}').attr('disabled', 'true');
+            };
+
+            if ($('#{{ filter.form.errorCode.id_for_label }}').val().length !== 0) {
+                $('#{{ filter.form.SRNumber.id_for_label }}').attr('disabled', 'true');
+                $('#{{ filter.form.SerialNumber.id_for_label }}').attr('disabled', 'true');
+            };
+            if ($('#{{ filter.form.SerialNumber.id_for_label }}').val().length !== 0) {
+                $('#{{ filter.form.Model.id_for_label }}').attr('disabled', 'true');
+                $('#{{ filter.form.errorCode.id_for_label }}').attr('disabled', 'true');
+            };
+            if ($('#{{ filter.form.SRNumber.id_for_label }}').val().length !== 0) {
+                $('#{{ filter.form.Model.id_for_label }}').attr('disabled', 'true');
+                $('#{{ filter.form.errorCode.id_for_label }}').attr('disabled', 'true');
+            };
+
+            $('#{{ filter.form.Model.id_for_label }}').blur(function () {
+                if ($(this).val().length !== 0) {
+                    $('#{{ filter.form.SRNumber.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.SerialNumber.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.SRNumber.id_for_label}}_label').attr('hidden', 'true');
+                    $('#{{ filter.form.SerialNumber.id_for_label }}_label').attr('hidden', 'true');
+                }
+            });
+            $('#{{ filter.form.errorCode.id_for_label }}').blur(function () {
+                if ($(this).val().length !== 0) {
+                    $('#{{ filter.form.SRNumber.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.SerialNumber.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.SerialNumber.id_for_label }}_label').attr('hidden', 'true');
+                    $('#{{ filter.form.SRNumber.id_for_label }}_label').attr('hidden', 'true');
+                }
+            });
+            $('#{{ filter.form.SerialNumber.id_for_label }}').blur(function () {
+                if ($(this).val().length !== 0) {
+                    $('#{{ filter.form.Model.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.Model.id_for_label }}_label').attr('hidden', 'true');
+                    $('#{{ filter.form.errorCode.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.errorCode.id_for_label }}_label').attr('hidden', 'true');
+                }
+            });
+            $('#{{ filter.form.SRNumber.id_for_label }}').blur(function () {
+                if ($(this).val().length !== 0) {
+                    $('#{{ filter.form.Model.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.Model.id_for_label }}_label').attr('hidden', 'true');
+                    $('#{{ filter.form.errorCode.id_for_label }}').attr('hidden', 'true');
+                    $('#{{ filter.form.errorCode.id_for_label }}_label').attr('hidden', 'true');
+                }
+            });
+           $("#dt1").datepicker({
+                dateFormat: "yy-mm-dd",
+                minDate: "2018-11-01",
+                onSelect: function (date) {
+                    var dt2 = $('#dt2');
+                    //var startDate = $(this).datepicker('getDate');
+                    var startDate = new Date();
+                    var minDate = $(this).datepicker('getDate');
+                    dt2.datepicker('setDate', minDate);
+                    //startDate.setDate(startDate.getDate() + 730);
+                    minDate.setDate(minDate.getDate() + 1);
+                    //sets dt2 maxDate to the last day of 730 days window
+                    dt2.datepicker('option', 'maxDate', startDate);
+                    dt2.datepicker('option', 'minDate', minDate);
+                }
+            });
+            $('#dt2').datepicker({
+                dateFormat: "yy-mm-dd"
+            });
+            $('input[name=checkListItem').val('');
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('input').on('blur', function() {
+                if ($("#myform").valid()) {
+                    $('#myBtn').prop('disabled', false);
+                } else {
+                    $('#myBtn').prop('disabled', 'disabled');
+                }
+            });
+        });
+    </script>
+    {% endif %}
+    <!-- Resources -->
+    {% load static %}
+    <script src={% static 'javascript/core.js' %}></script>
+    <script src={% static 'javascript/charts.js' %}></script>
+    <script src={% static 'javascript/animated.js' %}></script>
+
+    <!-- Chart code -->
+    {% autoescape off %}
+    {% if data_source == 'SRQs' or data_source == 'both'%}
+    {% if not request.GET.SerialNumber and not request.GET.SRNumber %}
+    <script>
+    am4core.ready(function() {
+
+    // Themes begin
+    am4core.useTheme(am4themes_animated);
+    // Themes end
+
+    // Create chart instance
+    var chart_srq = am4core.create("chartdiv_srq", am4charts.PieChart);
+
+    // Add data
+    chart_srq.data = {{ srq_statistic_df_dict }};
+
+
+    let pieSeries_srq = chart_srq.series.push(new am4charts.PieSeries());
+    pieSeries_srq.dataFields.value = "size";
+    {% if request.GET.Model or search_type == 'general' %}
+    pieSeries_srq.dataFields.category = "ErrorCode";
+    {% elif request.GET.errorCode %}
+    pieSeries_srq.dataFields.category = "Model";
+    {% endif %}
+    pieSeries_srq.slices.template.stroke = am4core.color("#fff");
+    pieSeries_srq.slices.template.strokeOpacity = 1;
+
+    // This creates initial animation
+    pieSeries_srq.hiddenState.properties.opacity = 1;
+    pieSeries_srq.hiddenState.properties.endAngle = -90;
+    pieSeries_srq.hiddenState.properties.startAngle = -90;
+    pieSeries_srq.labels.template.fontSize = 10;
+
+    chart_srq.hiddenState.properties.radius = am4core.percent(0);
+    chart_srq.exporting.menu = new am4core.ExportMenu();
+    }); // end am4core.ready()
+    </script>
+    {% endif %}
+    {% endif %}
+    {% if cases_chart_data %}
+    <script>
+        am4core.ready(function() {
+
+        // Themes begin
+        am4core.useTheme(am4themes_animated);
+        // Themes end
+
+        // Create chart instance
+        var chart_cases = am4core.create("chartdiv_cases", am4charts.PieChart);
+
+        // Add data
+        {% if request.GET.errorCode %}
+        chart_cases.data =[
+        {% for item in cases_a %}
+                {% for i in item.statistic %}
+                    {{ i }},
+                {% endfor %}
+        {% endfor %}
+
+        {% else %}
+        chart_cases.data = [
+            {% for item in d %}
+                {% for i in item.statistic %}
+                    {{ i }},
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+        ];;
+        // Add and configure Series
+        var pieSeries_cases = chart_cases.series.push(new am4charts.PieSeries());
+        pieSeries_cases.dataFields.value = "error_count";
+        {% if request.GET.Model %}
+        pieSeries_cases.dataFields.category = "PredictErrorCode";
+        {% elif request.GET.errorCode %}
+        pieSeries_cases.dataFields.category = "Model";
+        {% endif %}
+        pieSeries_cases.slices.template.stroke = am4core.color("#fff");
+        pieSeries_cases.slices.template.strokeOpacity = 1;
+        pieSeries_cases.labels.template.fontSize = 10;
+
+
+        // This creates initial animation
+        pieSeries_cases.hiddenState.properties.opacity = 1;
+        pieSeries_cases.hiddenState.properties.endAngle = -90;
+        pieSeries_cases.hiddenState.properties.startAngle = -90;
+
+        chart_cases.hiddenState.properties.radius = am4core.percent(0);
+        chart_cases.exporting.menu = new am4core.ExportMenu();
+        }); // end am4core.ready()
+        </script>
+        {% endif %}
+        {% endautoescape %}
+
+{% endblock content %}

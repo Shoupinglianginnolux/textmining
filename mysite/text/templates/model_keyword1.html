@@ -1,0 +1,106 @@
+{% extends 'model_evaluation.html' %}
+
+{% block content %}
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <h5 class="card-title">Advanced Search</h5>
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                        <a class="nav-item nav-link" id="nav-home-tab"                             href={% url 'model_classification' %} aria-controls="nav-home"
+                            aria-selected="false">Classification</a>
+                        <a class="nav-item nav-link active" id="nav-keyword-tab"                             href={% url 'model_keyword' %} aria-controls="nav-keyword"
+                            aria-selected="true">Keyword</a>
+                        <a class="nav-item nav-link" id="nav-osr-tab" href={% url 'osr' %}
+                            aria-controls="nav-osr" aria-selected="false">OSR</a>
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+
+                    <div class="tab-pane fade" id="nav-keyword" role="tabpanel" aria-labelledby="nav-keyword-tab">
+                        <div class="row no-gutters">
+                            <div class="col-md-4">
+                                <form action="" method="post">
+                                    {% csrf_token %}
+                                    <label for="{{ form1.start_date.id_for_label }}">Start Date &nbsp; &nbsp;</label>
+                                    {{ form1.start_date }}
+                                    <label for="{{ form1.data_source.id_for_label }}">Data Source</label>
+                                    {{ form1.data_source }}<br>
+                                    <label for="{{ form1.keywords.id_for_label }}">Keywords &nbsp; &nbsp;</label>
+                                    {{ form1.keywords }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form1.end_date.id_for_label }}">End Date</label>
+                                {{ form1.end_date }}
+                            </div>
+                            <div class="col-md-4">
+                                <button type="reset" class="btn btn-default">Reset</button>
+                                <button type="submit" class="btn btn-primary float-right romance">Submit</button>
+                                </form>
+                            </div>
+
+                        </div>
+                        {% if result %}
+                        <div class="row bg-warning ">
+                            <div class="col-sm">
+                                <h6></h6>
+                            </div>
+                            <div class="col-sm">
+                                <button type="reset" class="btn btn-danger  float-right romance">Export summary data</button>
+                                <button type="submit" class="btn btn-danger float-right romance">Export error data</button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {% load static %}
+                                <img src="{% static "text/example.png" %}" width="100%" height="auto" a lt="My image">
+                            </div>
+                            <div class="col-md-3">
+                                {% load static %}
+                                <img src="{% static "text/example.png" %}" width="100%" height="auto" a lt="My image">
+                            </div>
+                            <div class="col">
+                                {% load static %}
+                                <img src="{% static "text/example.png" %}" width="100%" height="auto" a lt="My image">
+                            </div>
+                            {% if query %}
+                            <div class="col-md-3">
+                                {% for item in page_obj %}
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td class="small">{{item.caseNumber}}</td>
+                                        <td class="small">{{item.machine_model}}</td>
+                                        <td class="small">{{item.serialNumber}}</td>
+                                    </tr>
+                                </table>
+                                {% endfor %}
+                                <div class="pagination">
+                                    <span class="step-links">
+                                        {% if page_obj.has_previous %}
+                                        <a href="?page=1">&laquo; first</a>
+                                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                                        {% endif %}
+
+                                        <span class="current">
+                                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                                        </span>
+
+                                        {% if page_obj.has_next %}
+                                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

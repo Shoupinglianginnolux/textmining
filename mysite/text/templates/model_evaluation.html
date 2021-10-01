@@ -1,0 +1,49 @@
+{% extends "base_generic.html" %}
+
+
+{% block navbar %}
+<div class="row">
+    <div class="col-12 col-sm-12 col-lg-12">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'test' %} aria-controls="model_eval"
+                    aria-selected="true">Model Evaluation</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} aria-controls="defect"
+                    aria-selected="false">Defect Classification</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'keyword_summary' %} aria-controls="keyword_summary"
+                    aria-selected="false">Keyword Summary</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'onsite_repair' %} aria-controls="onsite_repair"
+                    aria-selected="false">Onsite Repair</a>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <h5 class="card-title">Data Upload</h5>
+        <div class="form-group right">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="file" class="form-control-file" name="file2upload" id="file2upload"
+                        placeholder="Choose a file">
+                </div>
+                <div class="col-md-6">
+                    <button type="reset" class="btn btn-default  float-right romance">Clean</button>
+                    <button type="submit" class="btn btn-primary  float-right romance">Update Data</button>
+                    <button type="submit" class="btn btn-secondary  float-right romance">Update Keyword</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}

@@ -1,0 +1,358 @@
+{% extends 'base_generic.html' %}
+
+{% block navbar %}
+<div class="row">
+    <div class="col-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'test' %} role="tab" aria-controls="model_eval"
+                    aria-selected="false">Latest Model</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} role="tab" aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% endblock navbar %}
+
+
+{% block content %}
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <h5 class="card-title">Data Upload</h5>
+        <div class="form-group right">
+            <form action={% url 'parse_excel' %} method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="file" class="form-control-file" name="file2upload" id="myfile"
+                            placeholder="Choose a file" required>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary  float-right romance">Update Keyword</button>
+                        <button type="reset" class="btn btn-danger  float-right romance" value="reset"
+                            vOnClick="this.form.reset()">Clear</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                        <a class="nav-item nav-link" id="nav-home-tab" href={% url 'model_classification' %}
+                            aria-selected="false">Error Code Classification</a>
+                        <a class="nav-item nav-link active" id="nav-keyword-tab" href={% url 'keyword_summary' %}
+                            aria-selected="true">Keyword Summary</a>
+
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                        <div class="card" style="width: 100%;">
+                            <div class="card-body">
+                                <div class="row bg-warning ">
+                                    <div class="col-sm">
+                                        <a class="btn btn-danger float-right romance upanddown" {% if analytics_to_display_list_cat or analytics_to_display_list_cat_cases %} href={% url 'export_latest_keyword_summary_data' %} {% endif %}>Export Summary Data</a>
+                                    </div>
+                                </div>
+                                {% if analytics_to_display_list_cat or analytics_to_display_list_cat_cases %}
+                                <div class="row">
+                                    <div class="col-md-6 light-orange">
+                                        <!-- graph for keyword summary -->
+                                        <div style="width:100%;height:300px">
+                                            <canvas id="layanan_bar"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 light-blue">
+                                        <!-- graph for keyword summary -->
+                                        <div style="width:100%;height:300px">
+                                            <canvas id="layanan_bar1"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 light-orange">
+                                        <p>	&nbsp;</p>
+                                        <div id="chartdiv_srq" style="width:100%;"></div>
+                                        <p>	&nbsp;</p>
+                                    </div>
+                                    <div class="col-md-6 light-blue">
+                                        <p>	&nbsp;</p>
+                                        <div id="chartdiv_cases" style="width:100%;"></div>
+                                        <p>	&nbsp;</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 light-orange">
+                                        <div style="width:100%;height:300px">
+                                            <canvas id="layanan_line"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 light-blue">
+                                        <div style="width:100%;height:300px">
+                                            <canvas id="layanan_line1"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% if analytics_to_display_list_cat or analytics_to_display_list_cat_cases %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+  <script>
+  {% autoescape off %}
+        $(function () {
+            {% if analytics_to_display_list_cat %}
+            var ctx_3 = document.getElementById("layanan_bar").getContext('2d');
+            var data = {
+                datasets: [{
+                    data: {{analytics_to_display_list_data}},
+                    backgroundColor: [
+                        '#3c8dbc',
+                        '#f56954',
+                        '#f39c12',
+                        '#ffff33',
+                        '#66BD92',
+                    ],
+                    label: 'SRQ keywords appeared',
+                }],
+                labels:{{analytics_to_display_list_cat}}
+            };
+            var myBarChart = new Chart(ctx_3, {
+                type: 'bar',
+                data: data,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: false
+                    },
+                    title: {
+                        text: 'SRQ Keyword Summary',
+                        display: true,
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Class'
+                        }
+                        }],
+                    }
+                }
+            });
+            var ctx_6 = document.getElementById("layanan_line").getContext('2d');
+            var data_6 = {
+                labels: {{labels}},
+                datasets: {{ data_to_draw }},
+            };
+            var myBarChart = new Chart(ctx_6, {
+                type: 'line',
+                data: data_6,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: true
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Week'
+                        }
+                        }],
+                    }
+                }
+            });
+            {% endif %}
+            {% if analytics_to_display_list_cat_cases %}
+            var ctx_4 = document.getElementById("layanan_bar1").getContext('2d');
+            var data_4 = {
+                datasets: [{
+                    data: {{analytics_to_display_list_data_cases}},
+                    backgroundColor: [
+                        '#3c8dbc',
+                        '#f56954',
+                        '#f39c12',
+                        '#ffff33',
+                        '#66BD92',
+                    ],
+                    label: 'Cases keywords appeared',
+                }],
+                labels:{{analytics_to_display_list_cat_cases}}
+
+            };
+            var myBarChart = new Chart(ctx_4, {
+                type: 'bar',
+                data: data_4,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            fontSize: 6,
+                        },
+                        display: false
+                    },
+                    title: {
+                        text: 'Cases Keyword Summary',
+                        display: true,
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Class'
+                        }
+                        }],
+                    }
+
+                }
+            });
+
+            var ctx_5 = document.getElementById("layanan_line1").getContext('2d');
+            var data_5 = {
+                labels: {{ labels_cases }},
+                datasets: {{ data_to_draw_cases }},
+            };
+            var myBarChart = new Chart(ctx_5, {
+                type: 'line',
+                data: data_5,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: true
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Week'
+                        }
+                        }],
+                    }
+                }
+            });
+            {% endif %}
+
+        });
+
+    </script>
+    <!-- Resources -->
+    {% load static %}
+    <script src={% static 'javascript/core.js' %}></script>
+    <script src={% static 'javascript/charts.js' %}></script>
+    <script src={% static 'javascript/animated.js' %}></script>
+
+<!-- Chart code -->
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+// Create chart instance
+{% if analytics_to_display_list_cat %}
+var chart_srq = am4core.create("chartdiv_srq", am4charts.PieChart);
+
+// Add data
+chart_srq.data = {{ analytics_to_display }};
+
+// Add and configure Series
+var pieSeries_srq = chart_srq.series.push(new am4charts.PieSeries());
+pieSeries_srq.dataFields.value = "amount";
+pieSeries_srq.dataFields.category = "class";
+pieSeries_srq.slices.template.stroke = am4core.color("#fff");
+pieSeries_srq.slices.template.strokeOpacity = 1;
+
+// This creates initial animation
+pieSeries_srq.hiddenState.properties.opacity = 1;
+pieSeries_srq.hiddenState.properties.endAngle = -90;
+pieSeries_srq.hiddenState.properties.startAngle = -90;
+pieSeries_srq.labels.template.fontSize = 10;
+
+chart_srq.hiddenState.properties.radius = am4core.percent(0);
+chart_srq.exporting.menu = new am4core.ExportMenu();
+{% endif %}
+{% if analytics_to_display_list_cat_cases %}
+var chart_cases = am4core.create("chartdiv_cases", am4charts.PieChart);
+chart_cases.data = {{ analytics_to_display_cases }};
+
+
+var pieSeries_cases = chart_cases.series.push(new am4charts.PieSeries());
+pieSeries_cases.dataFields.value = "amount";
+pieSeries_cases.dataFields.category = "class";
+pieSeries_cases.slices.template.stroke = am4core.color("#fff");
+pieSeries_cases.slices.template.strokeOpacity = 1;
+
+
+// This creates initial animation
+pieSeries_cases.hiddenState.properties.opacity = 1;
+pieSeries_cases.hiddenState.properties.endAngle = -90;
+pieSeries_cases.hiddenState.properties.startAngle = -90;
+pieSeries_cases.labels.template.fontSize = 10;
+chart_cases.hiddenState.properties.radius = am4core.percent(0);
+chart_cases.exporting.menu = new am4core.ExportMenu();
+
+}); // end am4core.ready()
+{% endif %}
+{% endautoescape %}
+</script>
+{% endif %}
+{% endblock content %}

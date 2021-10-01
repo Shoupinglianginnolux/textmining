@@ -1,0 +1,274 @@
+{% extends 'base_generic.html' %}
+{% block head %}
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+{% endblock head %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr_dashboard' %}">自動判定結果</a>
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr' %}">F2 Score Trend</a>
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr_trend' %}">料件使用分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr_usage' %}">使用比例分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr_unusual' %}">單一料件分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr_distribution' %}">預測實際分析</a>
+                                        <a class="btn btn-outline-info btn-block my-2 active"  style="white-space: normal;" href="{% url 'osr_value_graph' %}">料件費用管理</a>
+                                        <a class="btn btn-outline-info btn-block my-2"  style="white-space: normal;" href="{% url 'osr_search' %}">預測用料查詢</a>
+                                        {% load poll_extras %}
+                                        {% if request.user|has_group:"RMA" %}
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_maintain' %}">資料維護</a>
+                                        {% endif %}
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            {% if error_msg %}
+                                            <h5 class="card-title text-danger">{{error_msg}}</h5>
+                                            {% else %}
+                                            <h5 class="card-title">Please enter search conditions</h5>
+
+
+                                            <form action="" method="get">
+                                                <div class="row">
+                                                <div class="col">
+                                                        <label for="{{ filter.form.start_date.id_for_label }}"
+                                                            class='addRedStar'>Start Date</label><br>
+                                                        {% if machine_model %}
+                                                        {{request.GET.start_date}}
+                                                        {% else %}
+                                                        {{ filter.form.start_date }}
+                                                        {% endif %}
+                                                        <small class="form-text text-muted">Either select from calendar or input in YYYY-MM-DD format</small>
+                                                        <br/>
+                                                        <label for="data_source">客戶機種</label> <br>
+                                                        {% if machine_model %}
+                                                        {% for i in machine_model %}
+                                                            {{i}},
+                                                        {% endfor %}
+                                                        {% else %}
+                                                        <select class="form-control w-100" name="machine_model" id="machine_model" multiple required>
+                                                            {% for model in all_models_list %}
+                                                            <option value="{{model}}">{{model}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        {% endif %}
+                                                        <br>
+                                                </div>
+                                                <div class="col">
+                                                    <label for="{{ filter.form.end_date.id_for_label }}"
+                                                        class='addRedStar'>End
+                                                        Date</label><br>
+                                                    {% if machine_model %}
+                                                    {{request.GET.end_date}}
+                                                    {% else %}
+                                                    {{ filter.form.end_date }}
+                                                    {% endif %}
+                                                    <small class="form-text text-muted">Either select from calendar or input in YYYY-MM-DD format</small>
+                                                </div>
+                                                <div class="col">
+                                                    <a class="btn btn-danger" href="{% url 'osr_value_graph' %}"
+                                                        >Clean</a>
+                                                        {% if not machine_model %}
+                                                    <button type="submit" class="btn btn-primary "
+                                                        >Submit</button>
+                                                        {% endif %}
+                                                </div>
+
+                                            </div>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if machine_model %}
+                                    <div class="card" id="result">
+                                        <div class="card-body">
+                                            <h4 class="card-title">金額</h4>
+                                            <div class="align-middle">
+                                                <p class="font-weight-bold">
+                                                    {% load mathfilters %}
+                                                    <span style="color: #67b7dc;">實際總金額：USD {{sent_total|abs|floatformat:2}}</span>
+                                                        &nbsp;&nbsp;
+                                                    <span style="color: #6794dc;">預測總金額：USD {{ predict_total|floatformat:2 }}</span>
+                                                </p>
+                                            </div>
+                                            <div class="align-right">
+                                                <a class="btn btn-danger"
+                                                {% if predict_total != 0 %}
+                                                href="{% url 'export_osr_value_graph_search_result' %}"
+                                                {% endif %}
+                                                role="button">Export Data</a>
+                                            </div>
+                                            <div class="row">
+                                                <!-- graph for keyword summary -->
+                                                <div style="width:100%; height: 500px" id="chartdiv">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(function () {
+    $("#dt1").datepicker({
+        dateFormat: "yy-mm-dd",
+        minDate: "2018-11-01",
+        onSelect: function (date) {
+        var dt2 = $('#dt2');
+        var startDate = $(this).datepicker('getDate');
+        var minDate = $(this).datepicker('getDate');
+        dt2.datepicker('setDate', minDate);
+        startDate.setDate(startDate.getDate() + 730);
+    minDate.setDate(minDate.getDate() + 1);
+    //sets dt2 maxDate to the last day of 730 days window
+    dt2.datepicker('option', 'maxDate', startDate);
+    dt2.datepicker('option', 'minDate', minDate);
+}
+    });
+    $('#dt2').datepicker({
+        dateFormat: "yy-mm-dd"
+    });
+});
+</script>
+<script>
+var app = new Vue({
+    el: '#root',
+    delimiters: ['[[', ']]'],
+    data: {
+        btnText: "隐藏",
+        isShow: false
+    },
+    methods: {
+        showToggle: function () {
+            this.isShow = !this.isShow
+            if (this.isShow) {
+                this.btnText = "隐藏"
+            } else {
+                this.btnText = "显示"
+            }
+        }
+    }
+})
+</script>
+{% autoescape on %}
+<!-- Chart code -->
+{% if machine_model %}
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+// Create chart instance
+var chart = am4core.create("chartdiv", am4charts.XYChart);
+
+// Add data
+chart.data = {{ graph_data|safe }};
+
+// Use only absolute numbers
+chart.numberFormatter.numberFormat = "#.#s";
+
+// Create axes
+var categoryAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+categoryAxis.dataFields.category = "age";
+categoryAxis.renderer.grid.template.location = 0;
+categoryAxis.renderer.inversed = true;
+
+var valueAxis = chart.xAxes.push(new am4charts.ValueAxis());
+valueAxis.extraMin = 0.1;
+valueAxis.extraMax = 0.1;
+valueAxis.renderer.minGridDistance = 40;
+valueAxis.renderer.ticks.template.length = 5;
+valueAxis.renderer.ticks.template.disabled = false;
+valueAxis.renderer.ticks.template.strokeOpacity = 0.4;
+valueAxis.renderer.labels.template.adapter.add("text", function(text) {
+  return text == "Male" || text == "Female" ? text : text + "";
+})
+
+// Create series
+var male = chart.series.push(new am4charts.ColumnSeries());
+male.dataFields.valueX = "male";
+male.dataFields.categoryY = "age";
+male.clustered = false;
+
+var maleLabel = male.bullets.push(new am4charts.LabelBullet());
+maleLabel.label.text = "{valueX}";
+maleLabel.label.hideOversized = false;
+maleLabel.label.truncate = false;
+maleLabel.label.horizontalCenter = "right";
+maleLabel.label.dx = -10;
+
+var female = chart.series.push(new am4charts.ColumnSeries());
+female.dataFields.valueX = "female";
+female.dataFields.categoryY = "age";
+female.clustered = false;
+
+var femaleLabel = female.bullets.push(new am4charts.LabelBullet());
+femaleLabel.label.text = "{valueX}";
+femaleLabel.label.hideOversized = false;
+femaleLabel.label.truncate = false;
+femaleLabel.label.horizontalCenter = "left";
+femaleLabel.label.dx = 10;
+
+var maleRange = valueAxis.axisRanges.create();
+maleRange.value = -10;
+maleRange.endValue = 0;
+maleRange.label.text = "";
+maleRange.label.fill = chart.colors.list[0];
+maleRange.label.dy = 20;
+maleRange.label.fontWeight = '600';
+maleRange.grid.strokeOpacity = 1;
+maleRange.grid.stroke = male.stroke;
+
+var femaleRange = valueAxis.axisRanges.create();
+femaleRange.value = 0;
+femaleRange.endValue = 10;
+femaleRange.label.text = "";
+femaleRange.label.fill = chart.colors.list[1];
+femaleRange.label.dy = 20;
+femaleRange.label.fontWeight = '600';
+femaleRange.grid.strokeOpacity = 1;
+femaleRange.grid.stroke = female.stroke;
+
+chart.exporting.menu = new am4core.ExportMenu();
+}); // end am4core.ready()
+</script>
+{% endif %}
+{% endautoescape %}
+
+{% endblock  %}

@@ -1,0 +1,893 @@
+{% extends 'base_generic.html' %}
+{% block head %}
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+{% endblock head %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block my-2"
+                                            href="{% url 'osr_dashboard' %}">儀表板</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr' %}">F2趨勢</a>
+                                        <a class="btn btn-outline-info btn-block active my-2"
+                                            href="{% url 'osr_material_graph' %}">料件圖</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_trend' %}">趨勢</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_usage' %}">使用狀況</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_unusual' %}">異常狀況</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_distribution' %}">分佈圖</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_value_graph' %}">金額</a>
+                                        <a class="btn btn-outline-info btn-block my-2" href="{% url 'osr_search' %}">細項查詢</a>
+                                        {% load poll_extras %}
+                                        {% if request.user|has_group:"RMA" %}
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_maintain' %}">資料維護</a>
+                                        {% endif %}
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Please enter search conditions</h5>
+                                            <div class="row">
+                                                <div class="col">
+                                                    <form action="" method="post">
+                                                        {% csrf_token %}
+                                                        <label for="{{ filter.form.start_date.id_for_label }}"
+                                                            class='addRedStar'>Start Date</label><br>
+                                                        {{ form.start_date }}<br>
+                                                        <label for="data_source">Part 名稱</label> <br>
+                                                        <select class="form-control" name="machine_model"
+                                                        id="machine_model" @change=partOnChange()>
+                                                        <option value="">-----</option>
+                                                        <option value="wifi">Wifi</option>
+                                                        <option value="power">Power</option>
+                                                    </select>
+                                                        <br>
+                                                </div>
+                                                <div class="col">
+                                                    <label for="{{ filter.form.end_date.id_for_label }}"
+                                                        class='addRedStar'>End
+                                                        Date</label><br>
+                                                    {{ form.end_date }}<br>
+                                                    <label
+                                                        for="{{ filter.form.machine_model.id_for_label }}">客戶機種</label><br>
+                                                        <select class="form-control" name="machine_model"
+                                                        id="machine_model" @change=customerMachineModelSelectedChange()>
+                                                        <option value="">-----</option>
+                                                        <option value="50">50 Inch</option>
+                                                        <option value="36">36 Inch</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <label for="display_mode">Display Mode</label>
+                                                        <select class="form-control" name="display_mode"
+                                                            id="display_mode" @change=onChange() v-model="displayMode">
+                                                            <option value="week">By Week</option>
+                                                            <option value="month">By Month</option>
+                                                        </select>
+                                                    </div>
+                                                    <a class="btn btn-danger" href="{% url 'osr_unusual' %}"
+                                                        >Clean</a>
+                                                    <button type="submit" class="btn btn-primary "
+                                                        v-on:click="showToggle">Submit</button>
+                                                </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card" id="result" v-show="isShow">
+                                        <div class="card-body">
+                                            <h4 class="card-title">料件圖</h4>
+                                            <div class="row">
+                                                <!-- graph for keyword summary -->
+                                                <div style="width:100%;height:500px" id="chartdiv" v-show="(byWeek && !customer_machine_model_selected && !part_selected)">
+                                                </div>
+                                                <div style="width:100%;height:500px" id="chartdiv1" v-show="(byWeek&& customer_machine_model_selected && !part_selected)">
+                                                </div>
+                                                <div style="width:100%;height:500px" id="chartdiv2" v-show="(byWeek&& !customer_machine_model_selected && part_selected)">
+                                                </div>
+                                                <div style="width:100%;height:500px" id="chartdiv3" v-show="(!byWeek && !customer_machine_model_selected && !part_selected)">
+                                                </div>
+                                                <div style="width:100%;height:500px" id="chartdiv4" v-show="(!byWeek&& customer_machine_model_selected && !part_selected)">
+                                                </div>
+                                                <div style="width:100%;height:500px" id="chartdiv5" v-show="(!byWeek&& !customer_machine_model_selected && part_selected)">
+                                                </div>
+                                                <div style="width:100%;height:500px" v-show="(byWeek && customer_machine_model_selected && part_selected)">
+                                                    <canvas id="chartjs-3"></canvas>
+                                                </div>
+                                                <div style="width:100%;height:500px" v-show="(!byWeek && customer_machine_model_selected && part_selected)">
+                                                    <canvas id="chartjs-2"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+        $(document).ready(function () {
+            $("#id_start_date").datepicker({
+                dateFormat: "yy-mm-dd",
+                minDate: "2018-11-01",
+                onSelect: function (date) {
+                    var dt2 = $('#dt2');
+                    var startDate = $(this).datepicker('getDate');
+                    var minDate = $(this).datepicker('getDate');
+                    dt2.datepicker('setDate', minDate);
+                    startDate.setDate(startDate.getDate() + 730);
+                    minDate.setDate(minDate.getDate() + 1);
+                    //sets dt2 maxDate to the last day of 730 days window
+                    dt2.datepicker('option', 'maxDate', startDate);
+                    dt2.datepicker('option', 'minDate', minDate);
+                }
+            });
+            $('#id_end_date').datepicker({
+                dateFormat: "yy-mm-dd"
+            });
+        });
+    </script>
+    <script>
+        var app = new Vue({
+            el: '#root',
+            delimiters: ['[[', ']]'],
+            data: {
+                isShow: false,
+                displayMode: '',
+                byWeek: true,
+                customer_machine_model_selected: false,
+                part_selected: false,
+
+            },
+            methods: {
+                showToggle: function () {
+                    this.isShow = !this.isShow
+                },
+                onChange: function () {
+                    if (this.displayMode == 'week') {
+                        this.byWeek = true
+                        console.log(this.byWeek);
+                    }else{
+                        this.byWeek = false
+                        console.log(this.byWeek);
+                    }
+                },
+                customerMachineModelSelectedChange(){
+                    this.customer_machine_model_selected = true
+                },
+                partOnChange(){
+                    this.part_selected = true
+                }
+            }
+        })
+    </script>
+<!-- Chart code -->
+
+<!-- Resources -->
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+var chart = am4core.create("chartdiv", am4charts.XYChart);
+chart.hiddenState.properties.opacity = 0; // this creates initial fade-in
+
+chart.data = [
+  {
+    category: "Week1",
+    value1: 1,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Week2",
+    value1: 2,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Week3",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "Week4",
+    value1: 4,
+    value2: 5,
+    value3: 6
+  },
+  {
+    category: "Week5",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "Week6",
+    value1: 2,
+    value2: 13,
+    value3: 1
+  }
+];
+
+chart.colors.step = 2;
+chart.padding(30, 30, 10, 30);
+chart.legend = new am4charts.Legend();
+
+var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+categoryAxis.dataFields.category = "category";
+categoryAxis.renderer.grid.template.location = 0;
+
+var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+valueAxis.min = 0;
+valueAxis.max = 100;
+valueAxis.strictMinMax = true;
+valueAxis.calculateTotals = true;
+valueAxis.renderer.minWidth = 50;
+
+
+var series1 = chart.series.push(new am4charts.ColumnSeries());
+series1.columns.template.width = am4core.percent(80);
+series1.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series1.name = "Series 1";
+series1.dataFields.categoryX = "category";
+series1.dataFields.valueY = "value1";
+series1.dataFields.valueYShow = "totalPercent";
+series1.dataItems.template.locations.categoryX = 0.5;
+series1.stacked = true;
+series1.tooltip.pointerOrientation = "vertical";
+
+var bullet1 = series1.bullets.push(new am4charts.LabelBullet());
+bullet1.interactionsEnabled = false;
+bullet1.label.text = "{valueY.value}";
+bullet1.label.fill = am4core.color("#ffffff");
+bullet1.locationY = 0.5;
+
+var series2 = chart.series.push(new am4charts.ColumnSeries());
+series2.columns.template.width = am4core.percent(80);
+series2.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series2.name = "Series 2";
+series2.dataFields.categoryX = "category";
+series2.dataFields.valueY = "value2";
+series2.dataFields.valueYShow = "totalPercent";
+series2.dataItems.template.locations.categoryX = 0.5;
+series2.stacked = true;
+series2.tooltip.pointerOrientation = "vertical";
+
+var bullet2 = series2.bullets.push(new am4charts.LabelBullet());
+bullet2.interactionsEnabled = false;
+bullet2.label.text = "{valueY.value}";
+bullet2.locationY = 0.5;
+bullet2.label.fill = am4core.color("#ffffff");
+
+var series3 = chart.series.push(new am4charts.ColumnSeries());
+series3.columns.template.width = am4core.percent(80);
+series3.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series3.name = "Series 3";
+series3.dataFields.categoryX = "category";
+series3.dataFields.valueY = "value3";
+series3.dataFields.valueYShow = "totalPercent";
+series3.dataItems.template.locations.categoryX = 0.5;
+series3.stacked = true;
+series3.tooltip.pointerOrientation = "vertical";
+
+var bullet3 = series3.bullets.push(new am4charts.LabelBullet());
+bullet3.interactionsEnabled = false;
+bullet3.label.text = "{valueY.value}";
+bullet3.locationY = 0.5;
+bullet3.label.fill = am4core.color("#ffffff");
+
+chart.scrollbarX = new am4core.Scrollbar();
+
+var chart = am4core.create('chartdiv1', am4charts.XYChart)
+chart.colors.step = 2;
+
+chart.legend = new am4charts.Legend()
+chart.legend.position = 'top'
+chart.legend.paddingBottom = 20
+chart.legend.labels.template.maxWidth = 95
+
+var xAxis = chart.xAxes.push(new am4charts.CategoryAxis())
+xAxis.dataFields.category = 'category'
+xAxis.renderer.cellStartLocation = 0.1
+xAxis.renderer.cellEndLocation = 0.9
+xAxis.renderer.grid.template.location = 0;
+
+var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+yAxis.min = 0;
+
+function createSeries(value, name) {
+    var series = chart.series.push(new am4charts.ColumnSeries())
+    series.dataFields.valueY = value
+    series.dataFields.categoryX = 'category'
+    series.name = name
+
+    series.events.on("hidden", arrangeColumns);
+    series.events.on("shown", arrangeColumns);
+
+    var bullet = series.bullets.push(new am4charts.LabelBullet())
+    bullet.interactionsEnabled = false
+    bullet.dy = 30;
+    bullet.label.text = '{valueY}'
+    bullet.label.fill = am4core.color('#ffffff')
+
+    return series;
+}
+
+chart.data = [
+    {
+        category: 'Week1',
+        first: 40,
+        second: 55,
+        third: 60
+    },
+    {
+        category: 'Week2',
+        first: 30,
+        second: 78,
+        third: 69
+    },
+    {
+        category: 'Week3',
+        first: 27,
+        second: 40,
+        third: 45
+    },
+    {
+        category: 'Week4',
+        first: 50,
+        second: 33,
+        third: 22
+    }
+]
+
+
+createSeries('first', 'The First');
+createSeries('second', 'The Second');
+createSeries('third', 'The Third');
+
+function arrangeColumns() {
+
+    var series = chart.series.getIndex(0);
+
+    var w = 1 - xAxis.renderer.cellStartLocation - (1 - xAxis.renderer.cellEndLocation);
+    if (series.dataItems.length > 1) {
+        var x0 = xAxis.getX(series.dataItems.getIndex(0), "categoryX");
+        var x1 = xAxis.getX(series.dataItems.getIndex(1), "categoryX");
+        var delta = ((x1 - x0) / chart.series.length) * w;
+        if (am4core.isNumber(delta)) {
+            var middle = chart.series.length / 2;
+
+            var newIndex = 0;
+            chart.series.each(function(series) {
+                if (!series.isHidden && !series.isHiding) {
+                    series.dummyData = newIndex;
+                    newIndex++;
+                }
+                else {
+                    series.dummyData = chart.series.indexOf(series);
+                }
+            })
+            var visibleCount = newIndex;
+            var newMiddle = visibleCount / 2;
+
+            chart.series.each(function(series) {
+                var trueIndex = chart.series.indexOf(series);
+                var newIndex = series.dummyData;
+
+                var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+                series.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+                series.bulletsContainer.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+            })
+        }
+    }
+}
+var chart = am4core.create("chartdiv2", am4charts.XYChart);
+chart.hiddenState.properties.opacity = 0; // this creates initial fade-in
+
+chart.data = [
+  {
+    category: "Week1",
+    value1: 1,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Week2",
+    value1: 2,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Week3",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "Week4",
+    value1: 4,
+    value2: 5,
+    value3: 6
+  },
+  {
+    category: "Week5",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "Week6",
+    value1: 2,
+    value2: 13,
+    value3: 1
+  }
+];
+
+chart.colors.step = 2;
+chart.padding(30, 30, 10, 30);
+chart.legend = new am4charts.Legend();
+
+var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+categoryAxis.dataFields.category = "category";
+categoryAxis.renderer.grid.template.location = 0;
+
+var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+valueAxis.min = 0;
+valueAxis.max = 100;
+valueAxis.strictMinMax = true;
+valueAxis.calculateTotals = true;
+valueAxis.renderer.minWidth = 50;
+
+
+var series1 = chart.series.push(new am4charts.ColumnSeries());
+series1.columns.template.width = am4core.percent(80);
+series1.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series1.name = "Series 1";
+series1.dataFields.categoryX = "category";
+series1.dataFields.valueY = "value1";
+series1.dataFields.valueYShow = "totalPercent";
+series1.dataItems.template.locations.categoryX = 0.5;
+series1.stacked = true;
+series1.tooltip.pointerOrientation = "vertical";
+
+var bullet1 = series1.bullets.push(new am4charts.LabelBullet());
+bullet1.interactionsEnabled = false;
+bullet1.label.text = "{valueY.totalPercent.formatNumber('#.00')}%";
+bullet1.label.fill = am4core.color("#ffffff");
+bullet1.locationY = 0.5;
+
+var series2 = chart.series.push(new am4charts.ColumnSeries());
+series2.columns.template.width = am4core.percent(80);
+series2.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series2.name = "Series 2";
+series2.dataFields.categoryX = "category";
+series2.dataFields.valueY = "value2";
+series2.dataFields.valueYShow = "totalPercent";
+series2.dataItems.template.locations.categoryX = 0.5;
+series2.stacked = true;
+series2.tooltip.pointerOrientation = "vertical";
+
+var bullet2 = series2.bullets.push(new am4charts.LabelBullet());
+bullet2.interactionsEnabled = false;
+bullet2.label.text = "{valueY.totalPercent.formatNumber('#.00')}%";
+bullet2.locationY = 0.5;
+bullet2.label.fill = am4core.color("#ffffff");
+
+var series3 = chart.series.push(new am4charts.ColumnSeries());
+series3.columns.template.width = am4core.percent(80);
+series3.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series3.name = "Series 3";
+series3.dataFields.categoryX = "category";
+series3.dataFields.valueY = "value3";
+series3.dataFields.valueYShow = "totalPercent";
+series3.dataItems.template.locations.categoryX = 0.5;
+series3.stacked = true;
+series3.tooltip.pointerOrientation = "vertical";
+
+var bullet3 = series3.bullets.push(new am4charts.LabelBullet());
+bullet3.interactionsEnabled = false;
+bullet3.label.text = "{valueY.totalPercent.formatNumber('#.00')}%";
+bullet3.locationY = 0.5;
+bullet3.label.fill = am4core.color("#ffffff");
+
+chart.scrollbarX = new am4core.Scrollbar();
+var chart = am4core.create("chartdiv3", am4charts.XYChart);
+chart.hiddenState.properties.opacity = 0; // this creates initial fade-in
+
+chart.data = [
+  {
+    category: "January",
+    value1: 1,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Febrary",
+    value1: 2,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "March",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "April",
+    value1: 4,
+    value2: 5,
+    value3: 6
+  },
+  {
+    category: "May",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "June",
+    value1: 2,
+    value2: 13,
+    value3: 1
+  }
+];
+
+chart.colors.step = 2;
+chart.padding(30, 30, 10, 30);
+chart.legend = new am4charts.Legend();
+
+var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+categoryAxis.dataFields.category = "category";
+categoryAxis.renderer.grid.template.location = 0;
+
+var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+valueAxis.min = 0;
+valueAxis.max = 100;
+valueAxis.strictMinMax = true;
+valueAxis.calculateTotals = true;
+valueAxis.renderer.minWidth = 50;
+
+
+var series1 = chart.series.push(new am4charts.ColumnSeries());
+series1.columns.template.width = am4core.percent(80);
+series1.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series1.name = "Series 1";
+series1.dataFields.categoryX = "category";
+series1.dataFields.valueY = "value1";
+series1.dataFields.valueYShow = "totalPercent";
+series1.dataItems.template.locations.categoryX = 0.5;
+series1.stacked = true;
+series1.tooltip.pointerOrientation = "vertical";
+
+var bullet1 = series1.bullets.push(new am4charts.LabelBullet());
+bullet1.interactionsEnabled = false;
+bullet1.label.text = "{valueY.value}";
+bullet1.label.fill = am4core.color("#ffffff");
+bullet1.locationY = 0.5;
+
+var series2 = chart.series.push(new am4charts.ColumnSeries());
+series2.columns.template.width = am4core.percent(80);
+series2.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series2.name = "Series 2";
+series2.dataFields.categoryX = "category";
+series2.dataFields.valueY = "value2";
+series2.dataFields.valueYShow = "totalPercent";
+series2.dataItems.template.locations.categoryX = 0.5;
+series2.stacked = true;
+series2.tooltip.pointerOrientation = "vertical";
+
+var bullet2 = series2.bullets.push(new am4charts.LabelBullet());
+bullet2.interactionsEnabled = false;
+bullet2.label.text = "{valueY.value}";
+bullet2.locationY = 0.5;
+bullet2.label.fill = am4core.color("#ffffff");
+
+var series3 = chart.series.push(new am4charts.ColumnSeries());
+series3.columns.template.width = am4core.percent(80);
+series3.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series3.name = "Series 3";
+series3.dataFields.categoryX = "category";
+series3.dataFields.valueY = "value3";
+series3.dataFields.valueYShow = "totalPercent";
+series3.dataItems.template.locations.categoryX = 0.5;
+series3.stacked = true;
+series3.tooltip.pointerOrientation = "vertical";
+
+var bullet3 = series3.bullets.push(new am4charts.LabelBullet());
+bullet3.interactionsEnabled = false;
+bullet3.label.text = "{valueY.value}";
+bullet3.locationY = 0.5;
+bullet3.label.fill = am4core.color("#ffffff");
+
+chart.scrollbarX = new am4core.Scrollbar();
+
+var chart = am4core.create('chartdiv4', am4charts.XYChart)
+chart.colors.step = 2;
+
+chart.legend = new am4charts.Legend()
+chart.legend.position = 'top'
+chart.legend.paddingBottom = 20
+chart.legend.labels.template.maxWidth = 95
+
+var xAxis = chart.xAxes.push(new am4charts.CategoryAxis())
+xAxis.dataFields.category = 'category'
+xAxis.renderer.cellStartLocation = 0.1
+xAxis.renderer.cellEndLocation = 0.9
+xAxis.renderer.grid.template.location = 0;
+
+var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+yAxis.min = 0;
+
+function createSeries(value, name) {
+    var series = chart.series.push(new am4charts.ColumnSeries())
+    series.dataFields.valueY = value
+    series.dataFields.categoryX = 'category'
+    series.name = name
+
+    series.events.on("hidden", arrangeColumns);
+    series.events.on("shown", arrangeColumns);
+
+    var bullet = series.bullets.push(new am4charts.LabelBullet())
+    bullet.interactionsEnabled = false
+    bullet.dy = 30;
+    bullet.label.text = '{valueY}'
+    bullet.label.fill = am4core.color('#ffffff')
+
+    return series;
+}
+
+chart.data = [
+    {
+        category: 'Jan',
+        first: 40,
+        second: 55,
+        third: 60
+    },
+    {
+        category: 'Feb',
+        first: 30,
+        second: 78,
+        third: 69
+    },
+    {
+        category: 'Mar',
+        first: 27,
+        second: 40,
+        third: 45
+    },
+    {
+        category: 'Apr',
+        first: 50,
+        second: 33,
+        third: 22
+    }
+]
+
+
+createSeries('first', 'Wifi');
+createSeries('second', 'Power');
+createSeries('third', 'Mal');
+
+function arrangeColumns() {
+
+    var series = chart.series.getIndex(0);
+
+    var w = 1 - xAxis.renderer.cellStartLocation - (1 - xAxis.renderer.cellEndLocation);
+    if (series.dataItems.length > 1) {
+        var x0 = xAxis.getX(series.dataItems.getIndex(0), "categoryX");
+        var x1 = xAxis.getX(series.dataItems.getIndex(1), "categoryX");
+        var delta = ((x1 - x0) / chart.series.length) * w;
+        if (am4core.isNumber(delta)) {
+            var middle = chart.series.length / 2;
+
+            var newIndex = 0;
+            chart.series.each(function(series) {
+                if (!series.isHidden && !series.isHiding) {
+                    series.dummyData = newIndex;
+                    newIndex++;
+                }
+                else {
+                    series.dummyData = chart.series.indexOf(series);
+                }
+            })
+            var visibleCount = newIndex;
+            var newMiddle = visibleCount / 2;
+
+            chart.series.each(function(series) {
+                var trueIndex = chart.series.indexOf(series);
+                var newIndex = series.dummyData;
+
+                var dx = (newIndex - trueIndex + middle - newMiddle) * delta
+
+                series.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+                series.bulletsContainer.animate({ property: "dx", to: dx }, series.interpolationDuration, series.interpolationEasing);
+            })
+        }
+    }
+}
+var chart = am4core.create("chartdiv5", am4charts.XYChart);
+chart.hiddenState.properties.opacity = 0; // this creates initial fade-in
+
+chart.data = [
+  {
+    category: "Jan",
+    value1: 1,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Feb",
+    value1: 2,
+    value2: 5,
+    value3: 3
+  },
+  {
+    category: "Mar",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "Apr",
+    value1: 4,
+    value2: 5,
+    value3: 6
+  },
+  {
+    category: "May",
+    value1: 3,
+    value2: 5,
+    value3: 4
+  },
+  {
+    category: "Jun",
+    value1: 2,
+    value2: 13,
+    value3: 1
+  }
+];
+
+chart.colors.step = 2;
+chart.padding(30, 30, 10, 30);
+chart.legend = new am4charts.Legend();
+
+var categoryAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+categoryAxis.dataFields.category = "category";
+categoryAxis.renderer.grid.template.location = 0;
+
+var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+valueAxis.min = 0;
+valueAxis.max = 100;
+valueAxis.strictMinMax = true;
+valueAxis.calculateTotals = true;
+valueAxis.renderer.minWidth = 50;
+
+
+var series1 = chart.series.push(new am4charts.ColumnSeries());
+series1.columns.template.width = am4core.percent(80);
+series1.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series1.name = "Series 1";
+series1.dataFields.categoryX = "category";
+series1.dataFields.valueY = "value1";
+series1.dataFields.valueYShow = "totalPercent";
+series1.dataItems.template.locations.categoryX = 0.5;
+series1.stacked = true;
+series1.tooltip.pointerOrientation = "vertical";
+
+var bullet1 = series1.bullets.push(new am4charts.LabelBullet());
+bullet1.interactionsEnabled = false;
+bullet1.label.text = "{valueY.totalPercent.formatNumber('#.00')}%";
+bullet1.label.fill = am4core.color("#ffffff");
+bullet1.locationY = 0.5;
+
+var series2 = chart.series.push(new am4charts.ColumnSeries());
+series2.columns.template.width = am4core.percent(80);
+series2.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series2.name = "Series 2";
+series2.dataFields.categoryX = "category";
+series2.dataFields.valueY = "value2";
+series2.dataFields.valueYShow = "totalPercent";
+series2.dataItems.template.locations.categoryX = 0.5;
+series2.stacked = true;
+series2.tooltip.pointerOrientation = "vertical";
+
+var bullet2 = series2.bullets.push(new am4charts.LabelBullet());
+bullet2.interactionsEnabled = false;
+bullet2.label.text = "{valueY.totalPercent.formatNumber('#.00')}%";
+bullet2.locationY = 0.5;
+bullet2.label.fill = am4core.color("#ffffff");
+
+var series3 = chart.series.push(new am4charts.ColumnSeries());
+series3.columns.template.width = am4core.percent(80);
+series3.columns.template.tooltipText =
+  "{name}: {valueY.totalPercent.formatNumber('#.00')}%";
+series3.name = "Series 3";
+series3.dataFields.categoryX = "category";
+series3.dataFields.valueY = "value3";
+series3.dataFields.valueYShow = "totalPercent";
+series3.dataItems.template.locations.categoryX = 0.5;
+series3.stacked = true;
+series3.tooltip.pointerOrientation = "vertical";
+
+var bullet3 = series3.bullets.push(new am4charts.LabelBullet());
+bullet3.interactionsEnabled = false;
+bullet3.label.text = "{valueY.totalPercent.formatNumber('#.00')}%";
+bullet3.locationY = 0.5;
+bullet3.label.fill = am4core.color("#ffffff");
+
+chart.scrollbarX = new am4core.Scrollbar();
+}); // end am4core.ready()
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+<script>
+  {% autoescape off %}
+  new Chart(document.getElementById("chartjs-3"),{"type":"bar","data":
+  {"labels":["Week1","Week2","Week3","Week4","Week5","Week6","Week7"],
+  "datasets":[{"label":"My First Dataset","data":[65,59,80,81,56,55,40],
+  "fill":false,
+  "backgroundColor":
+    ["rgba(255, 99, 132, 0.2)","rgba(255, 159, 64, 0.2)","rgba(255, 205, 86, 0.2)","rgba(75, 192, 192, 0.2)","rgba(54, 162, 235, 0.2)","rgba(153, 102, 255, 0.2)","rgba(201, 203, 207, 0.2)"],"borderColor":["rgb(255, 99, 132)","rgb(255, 159, 64)","rgb(255, 205, 86)","rgb(75, 192, 192)","rgb(54, 162, 235)","rgb(153, 102, 255)","rgb(201, 203, 207)"],"borderWidth":1}]},
+  "options":{"scales":{"yAxes":[{"ticks":{"beginAtZero":true}}]}}});
+  </script>
+  <script>
+  new Chart(document.getElementById("chartjs-2"),{"type":"bar","data":
+  {"labels":["January","February","March","April","May","June","July"],
+  "datasets":[{"label":"My First Dataset","data":[65,59,80,81,56,55,40]
+  ,"fill":false
+  ,"backgroundColor":
+    ["rgba(255, 99, 132, 0.2)","rgba(255, 159, 64, 0.2)","rgba(255, 205, 86, 0.2)","rgba(75, 192, 192, 0.2)","rgba(54, 162, 235, 0.2)","rgba(153, 102, 255, 0.2)","rgba(201, 203, 207, 0.2)"],"borderColor":["rgb(255, 99, 132)","rgb(255, 159, 64)","rgb(255, 205, 86)","rgb(75, 192, 192)","rgb(54, 162, 235)","rgb(153, 102, 255)","rgb(201, 203, 207)"],"borderWidth":1}]},
+  "options":{"scales":{"yAxes":[{"ticks":{"beginAtZero":true}}]}}});
+</script>
+    {% endautoescape  %}
+    {% endblock  %}

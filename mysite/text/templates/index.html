@@ -1,0 +1,287 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+<div class="container dream">
+    <div class="row">
+        <div class="col-12 col-sm-12 col-lg-12">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                {% load poll_extras %}
+                {% if request.user|has_group:"RMA" %} 
+                <li class="nav-item">
+                    <a class="nav-link text-white" href={% url 'test' %} aria-controls="model_eval" aria-selected="false">
+                        Latest Model
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link text-white" href={% url 'defect_classification' %} aria-controls="defect"
+                        aria-selected="false">Historical Data Search</a>
+                </li>
+                <li class="nav-item">
+                <a class="nav-link text-white" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+                
+            </ul>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/28
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">測試上傳歷史資料</li>
+                    <li class="list-group-item">底色優化辨識度</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/27
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">增加對舊版excel檔案格式支援</li>
+                    <li class="list-group-item">新增Latest ErrorCode Update Revise Data防呆</li>
+                    <li class="list-group-item">新增Latest ErrorCode Update New Data防呆</li>
+                    <li class="list-group-item">英文化圖例</li>
+                    <li class="list-group-item">刪減圓餅圖選項</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/24
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">修正error code 搜尋結果</li>
+                    <li class="list-group-item">keyword上傳防呆</li>
+                    <li class="list-group-item">修正Latest ErrorCode Summary Data格式和欄位</li>
+                    <li class="list-group-item">開放只輸入資料源和日期，產出查詢結果</li>
+                    <li class="list-group-item">優化Historical Keyword Summary頁面長條圖尺寸</li>
+                    <li class="list-group-item">優化各頁面圓餅圖</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/23
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">上傳時凍結窗格</li>
+                    <li class="list-group-item">修正Phase 1資料串接格式</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/22
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">串接前後端折線圖</li>
+                    <li class="list-group-item">資料庫上傳Update New Data Cases分頁防呆</li>
+                    <li class="list-group-item">修正Historical ErrorCode表格對齊</li>
+                    <li class="list-group-item">修正Historical Keyword container留白長度</li>
+                    <li class="list-group-item">版權宣告靠兩側對齊</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/21
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">串接前後端</li>
+                    <li class="list-group-item">已知bug修正</li>
+                    <li class="list-group-item">圓餅圖加上其他</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/10
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Latest Model/Error Code Classification圓餅圖數據庫連接</li>
+                    <li class="list-group-item">更新週期依據會議結果改為每週五上午10點，開放至隔週二上午10點</li>
+
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/09
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">資料來源為cases和both的搜尋功能</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/08
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">更新Keywords儲存格式與對應查詢</li>
+                    <li class="list-group-item">發現並修正繪圖的bug</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/03
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">更新Latest Error Code表格呈現方式</li>
+                    <li class="list-group-item">依據馥謙的回饋，修正格式</li>
+                    <li class="list-group-item">更新demo用檔案</li>
+                    <li class="list-group-item">修改檔名分析規則</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/07/02
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">更新Keyword Table 格式和讀取欄位</li>
+                    <li class="list-group-item">依據馥謙的回饋，修正格式</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/30
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">製作測試用頁面與資料</li>
+                    <li class="list-group-item">修改按鈕與連結</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/29
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">重新定向連結</li>
+                    <li class="list-group-item">編寫使用者測試手冊</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/24
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">定義資料庫查詢格式</li>
+                    <li class="list-group-item">上線查詢資料庫內容</li>
+                    <li class="list-group-item">產出亂數demo用資料</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/22
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">依照新的設計，重新劃UI</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/16
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">將圖表加入Summary Report</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/09
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">修正標題列用字</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/05
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">修改換頁方式</li>
+                    <li class="list-group-item">整併程式碼</li>
+                    <li class="list-group-item">加入ajax應用</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/04
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">處理日期時間格式問題</li>
+                    <li class="list-group-item">按照使用者需求修改上傳資料格式</li>
+                    <li class="list-group-item">產出對接用範例json</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/03
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">設計背景顏色</li>
+                    <li class="list-group-item">實作搜尋結果下載</li>
+                    <li class="list-group-item">Keyword Summary demo資料製作</li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/02
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">實作圓餅圖</li>
+                    <li class="list-group-item">增加示意資料</li>
+                    <li class="list-group-item">刻選項2</a></li>
+                </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/06/01
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">取得使用者上傳的excel表格</li>
+                    <li class="list-group-item">新增關鍵字資料庫</li>
+                    <li class="list-group-item">加入檔案格式錯誤頁面</li>
+                  </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/05/29
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">製作demo版本資料</li>
+                    <li class="list-group-item">查詢結果表格</li>
+                    <li class="list-group-item">百分比計算</li>
+                  </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/05/28
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">修正matplotlib的runtime error</li>
+                    <li class="list-group-item">修正mpld3占據記憶體問題</li>
+                    <li class="list-group-item">定義字型與背景色</li>
+                  </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/05/27
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">按鈕製作</li>
+                    <li class="list-group-item">規劃網頁版面</li>
+                    <li class="list-group-item">更新連結文字內容</li>
+                    <li class="list-group-item">修正Typo</li>
+                  </ul>
+            </div>
+            <div class="card" style="width: 100%;">
+                <div class="card-header">
+                    2020/05/26
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">統一按鈕顏色</li>
+                    <li class="list-group-item">重新規劃網頁架構</li>
+                    <li class="list-group-item">修正連結</li>
+                  </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- end row -->
+
+{% endblock content %}

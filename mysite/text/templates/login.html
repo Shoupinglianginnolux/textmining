@@ -1,0 +1,48 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+<div class="container light-orange">
+	{% if not user.is_authenticated %}
+	<div class="row">
+		{% if form.errors or message %}
+		<p class="text-danger font-weight-bold">Your username and password didn't match. Please try again.</p>
+		{% endif %}
+	</div>
+	<div class="row">
+		<p class="text-secondary">This is under testing. For official login page, please click 	&nbsp;</p><a href="{% url 'login' %}">Here</a>
+	</div>
+	<div class="row">
+		{% load static %}
+		<div class="imgcontainer">
+			<img src="{% static 'text/imagesbg.jpg' %}" alt="Avatar" class="avatar">
+		</div>
+	</div>
+
+	<div class="container">
+		<form method="post" ContentType="application/x-www-form-urlencoded" action="{% url 'login_view' %}">
+			{% csrf_token %}
+			<div class="form-group">
+			  <label for="userID">Innolux UserID</label>
+			  <input type="text" class="form-control" name="userID" id="userID">
+			</div>
+			<div class="form-group">
+			  <label for="password">Innolux Password</label>
+			  <input type="password" class="form-control" name="password" id="password">
+			</div>
+		<input class="btn btn-primary align-middle" type="submit" value="Login" id="login_btn"/>
+	</form>
+</div>
+
+	<div>
+		<input type="hidden" name="next" value="{{ next }}" />
+	</div>
+	</form>
+</div>
+</div>
+</div>
+
+{% else %}
+<meta http-equiv="refresh" content="0;url={% url 'user_manual' %}" />
+{% endif %}
+{% endblock %}

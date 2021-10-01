@@ -1,0 +1,556 @@
+{% extends 'base_generic.html' %}
+{% block navbar %}
+<div class="row">
+    <div class="col-9 col-sm-9 col-lg-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% load poll_extras %}
+            {% if request.user|has_group:"RMA" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'test' %} aria-controls="model_eval" aria-selected="true">Latest Model
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'defect_classification' %} aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            {% if request.user|has_group:"CQE_admin" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'cqe_configuration' %} role="tab" aria-controls="defect"
+                    aria-selected="false">CQE Configuration</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% endblock navbar %}
+
+
+{% block content %}
+
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab">
+                        <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                            aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                        <a class="nav-item nav-link active" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                            aria-controls="nav-keyword" aria-selected="true">Keyword Summary</a>
+                        <a class="nav-item nav-link" id="nav-osr-tab" href={% url 'osr_dashboard' %} aria-controls="nav-osr"
+                            aria-selected="false">Onsite Repair</a>
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                        <div class="card" style="width: 100%;">
+                            <div class="card-body">
+                                <h5 class="card-title">Advanced Search</h5>
+                                <div class="row">
+                                    <div class="col">
+                                        <form action="{% url 'historical_keyword_result' %}" method="get" id="myform"
+                                            autocomplete="off">
+                                            {% csrf_token %}
+                                            <label for="{{ srqs_keyword_filter.form.start_date.id_for_label }}"
+                                                class='addRedStar'>Start Date</label><br>
+                                            {% if analytics_to_display_list_data_cases or analytics_to_display_list_data or error_msg%}
+                                            <p>{{ request.GET.start_date }}</p>
+                                            {% else %}
+                                            {{ srqs_keyword_filter.form.start_date }}<br>
+                                            <small>Either select from calendar or input in YYYY-MM-DD format</small><br>
+                                            {% endif %}
+
+                                            {% if analytics_to_display_list_data_cases and analytics_to_display_list_data %}
+                                            <label for="data_source" class='addRedStar'>Data Source</label><br>
+                                            <p>both</p>
+                                            {% elif analytics_to_display_list_data_cases %}
+                                            <label for="data_source" class='addRedStar'>Data Source</label><br>
+                                            <p>Cases</p>
+                                            {% elif analytics_to_display_list_data %}
+                                            <label for="data_source" class='addRedStar'>Data Source</label><br>
+                                            <p>SRQs</p>
+                                            {% elif error_msg %}
+
+                                            {% else %}
+                                            <label for="data_source" class='addRedStar'>Data Source</label><br>
+                                            <select name="data_source">
+                                                <option>SRQs</option>
+                                                <option>Cases</option>
+                                                <option>both</option>
+                                            </select>
+                                            {% endif %}
+                                            <br>
+                                    </div>
+                                    <div class="col">
+                                        <label for="{{ srqs_keyword_filter.form.end_date.id_for_label }}"
+                                            class='addRedStar'>{{ srqs_keyword_filter.form.end_date.label }}</label><br>
+                                        {% if analytics_to_display_list_data_cases or analytics_to_display_list_data or error_msg %}
+                                        <p>{{ request.GET.end_date }} </p>
+                                        {% else %}
+                                        {{ srqs_keyword_filter.form.end_date }}<br>
+                                        <small>Either select from calendar or input in YYYY-MM-DD format</small><br>
+                                        {% endif %}
+                                        {% if legend %}
+                                        <label for="class">Class</label><br>
+                                        {% for item in legend %}
+                                        {{ item }}
+                                        {% endfor %}
+                                        {% elif error_msg %}
+                                        {% else %}
+                                        <label for="class">Class</label><br>
+                                        <select name="class" multiple required="true" id="class_chosen">
+                                            {% for c in allCategory %}
+                                            <option>{{ c.Class }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <br>
+                                        <small>Hold down the ctrl button to select multiple options</small>
+                                        {% endif %}
+
+                                    </div>
+                                    <div class="col">
+                                        <a href="{% url 'model_keyword' %}" class="btn btn-danger">Clear</a>
+                                        {% if error_msg %}
+                                        {% elif not analytics_to_display_list_data_cases and not analytics_to_display_list_data %}
+                                        <button type="submit" class="btn btn-primary " id="myBtn"
+                                            disabled="true">Submit</button>
+
+                                        {% endif %}
+                                        </form>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm bg-warning ">
+                        <div class="row">
+                            {% if srqs_keyword_filter %}
+                            <div class="col-sm" style="display: block">
+
+                            </div>
+                            <div class="col-sm">
+                                <a class="btn btn-danger  float-right romance upanddown" {% if firstload or error_msg %} {% else %}
+                                    href="{% url 'export_historical_keyword' %}" {% endif %}>Export Summary Data</a>
+                            </div>
+                            {% else %}
+                            <div class="col">
+                                <p>&nbsp;&nbsp;</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if analytics_to_display_list_data and analytics_to_display_list_data_cases%}
+                    <div class="row">
+                        <div class="col-md-6 light-orange">
+                            <!-- graph for keyword summary -->
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_bar"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6 light-blue">
+                            <!-- graph for keyword summary -->
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_bar1"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 light-orange">
+                            <p> &nbsp;</p>
+                            <div id="chartdiv_srq" style="width:100%;"></div>
+                            <p> &nbsp;</p>
+                        </div>
+                        <div class="col-md-6 light-blue">
+                            <p> &nbsp;</p>
+                            <div id="chartdiv_cases" style="width:100%;"></div>
+                            <p> &nbsp;</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 light-orange">
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_line"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6 light-blue">
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_line1"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif analytics_to_display_list_data %}
+                    <div class="row align-items-center">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-6 light-orange">
+                            <!-- graph for keyword summary -->
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_bar"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-3"></div>
+                    </div>
+                    <div class="row align-items-center">
+                    <div class="col-md-3"></div>
+                        <div class="col-md-6 light-orange">
+                            <p> &nbsp;</p>
+                            <div id="chartdiv_srq" style="width:100%;"></div>
+                            <p> &nbsp;</p>
+                        </div>
+                        <div class="col-md-3"></div>
+                    </div>
+                    <div class="row align-items-center">
+                    <div class="col-md-3"></div>
+                        <div class="col-md-6 light-orange">
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_line"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-3"></div>
+                    </div>
+                    {% elif analytics_to_display_list_data_cases%}
+                    <div class="row">
+                        <div class="col-md-3"></div>
+                        <div class="col-md-6 light-blue">
+                            <!-- graph for keyword summary -->
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_bar1"></canvas>
+                            </div>
+                        </div>
+                    <div class="col-md-3"></div>
+                    </div>
+                    <div class="row">
+                    <div class="col-md-3"></div>
+                        <div class="col-md-6 light-blue">
+                            <p> &nbsp;</p>
+                            <div id="chartdiv_cases" style="width:100%;"></div>
+                            <p> &nbsp;</p>
+                        </div>
+                    <div class="col-md-3"></div>
+                    </div>
+                    <div class="row">
+                    <div class="col-md-3"></div>
+                        <div class="col-md-6 light-blue">
+                            <div style="width:100%;height:300px">
+                                <canvas id="layanan_line1"></canvas>
+                            </div>
+                        </div>
+                    <div class="col-md-3"></div>
+                    </div>
+                    {% endif %}
+                    <div class="row">
+                        <p>{{ error_msg }}</p>
+                        <p class="text-primary">{{ firstload }}&nbsp;</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <h5 class="text-info">Processing...Please wait ...</h5>
+    </div>
+</div>
+{% if firstload %}
+
+<script>
+    $(document).ready(function () {
+        $('input').on('blur', function() {
+            if (($("#myform").valid()) && ($('#class_chosen').val())) {
+                $('#myBtn').prop('disabled', false);
+            } else {
+                $('#myBtn').prop('disabled', 'disabled');
+            }
+        });
+        $('#class_chosen').change(function(){
+            if (($("#myform").valid()) && ($('#class_chosen').val())) {
+                $('#myBtn').prop('disabled', false);
+            } else {
+                $('#myBtn').prop('disabled', 'disabled');
+            }
+        });
+        $("#dt1").datepicker({
+            dateFormat: "yy-mm-dd",
+            minDate: "2018-11-01",
+            onSelect: function (date) {
+                var dt2 = $('#dt2');
+                var startDate = $(this).datepicker('getDate');
+                var minDate = $(this).datepicker('getDate');
+                dt2.datepicker('setDate', minDate);
+                startDate.setDate(startDate.getDate() + 730);
+                $(this).datepicker('option', 'minDate', minDate);
+                minDate.setDate(minDate.getDate() + 1);
+                //sets dt2 maxDate to the last day of 730 days window
+                dt2.datepicker('option', 'maxDate', startDate);
+                dt2.datepicker('option', 'minDate', minDate);
+            }
+        });
+        $('#dt2').datepicker({
+            dateFormat: "yy-mm-dd"
+        });
+    });
+</script>
+<script>
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+
+// When the user clicks the button, open the modal
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+</script>
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+<script>
+  {% autoescape off %}
+        $(function () {
+            {% if analytics_to_display_list_data %}
+            var ctx_3 = document.getElementById("layanan_bar").getContext('2d');
+            var data = {
+                datasets: [{
+                    data: {{analytics_to_display_list_data}},
+                    backgroundColor: [
+                        '#3c8dbc',
+                        '#f56954',
+                        '#f39c12',
+                        '#ffff33',
+                        '#66BD92',
+                    ],
+
+                    label: 'SRQ keywords appeared',
+                }],
+                labels:{{analytics_to_display_list_cat}}
+            };
+
+            var myBarChart = new Chart(ctx_3, {
+                type: 'bar',
+                data: data,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: false
+                    },
+                    title: {
+                        text: 'SRQ Keyword Summary',
+                        display: true,
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Class'
+                        }
+                        }],
+                    }
+                }
+            });
+            {% endif %}
+            {% if analytics_to_display_list_data_cases %}
+            var ctx_4 = document.getElementById("layanan_bar1").getContext('2d');
+            var data_4 = {
+                datasets: [{
+                    data: {{analytics_to_display_list_data_cases}},
+                    backgroundColor: [
+                        '#3c8dbc',
+                        '#f56954',
+                        '#f39c12',
+                        '#ffff33',
+                        '#66BD92',
+                    ],
+
+                    label: 'Cases keywords appeared',
+                }],
+                labels:{{analytics_to_display_list_cat_cases}}
+
+            };
+            var myBarChart = new Chart(ctx_4, {
+                type: 'bar',
+                data: data_4,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            fontSize: 6,
+                        },
+                        display: false
+                    },
+                    title: {
+                        text: 'Cases Keyword Summary',
+                        display: true,
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Class'
+                        }
+                        }],
+                    }
+
+                }
+            });
+            {% endif %}
+            {% if analytics_to_display_list_data %}
+            var ctx_5 = document.getElementById("layanan_line").getContext('2d');
+            var data_5 = {
+                labels: {{ labels }},
+                datasets: {{ data_to_draw }},
+            };
+            var myBarChart = new Chart(ctx_5, {
+                type: 'line',
+                data: data_5,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: true
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Week'
+                        }
+                        }],
+                    }
+                }
+            });
+            {% endif %}
+            {% if analytics_to_display_list_data_cases %}
+            var ctx_6 = document.getElementById("layanan_line1").getContext('2d');
+            var data_6 = {
+                labels:{{labels_cases}},
+                datasets: {{ data_to_draw_cases }},
+            };
+            var myBarChart = new Chart(ctx_6, {
+                type: 'line',
+                data: data_6,
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12
+                        },
+                        display: true
+                    },
+                    scales: {
+                        yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Q\'ty'
+                        }
+                        }],
+                        xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Week'
+                        }
+                        }],
+                    }
+                }
+            });
+            {% endif %}
+        });
+
+    </script>
+    <!-- Resources -->
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+
+<!-- Chart code -->
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+// Create chart instance
+{% if analytics_to_display_list_data %}
+var chart_srq = am4core.create("chartdiv_srq", am4charts.PieChart);
+
+// Add data
+chart_srq.data = {{ analytics_to_display }};
+
+// Add and configure Series
+var pieSeries_srq = chart_srq.series.push(new am4charts.PieSeries());
+pieSeries_srq.dataFields.value = "amount";
+pieSeries_srq.dataFields.category = "class";
+pieSeries_srq.slices.template.stroke = am4core.color("#fff");
+pieSeries_srq.slices.template.strokeOpacity = 1;
+
+// This creates initial animation
+pieSeries_srq.hiddenState.properties.opacity = 1;
+pieSeries_srq.hiddenState.properties.endAngle = -90;
+pieSeries_srq.hiddenState.properties.startAngle = -90;
+pieSeries_srq.labels.template.fontSize = 10;
+chart_srq.exporting.menu = new am4core.ExportMenu();
+
+chart_srq.hiddenState.properties.radius = am4core.percent(0);
+{% endif %}
+{% if analytics_to_display_list_data_cases %}
+var chart_cases = am4core.create("chartdiv_cases", am4charts.PieChart);
+chart_cases.data = {{ analytics_to_display_cases }};
+
+
+var pieSeries_cases = chart_cases.series.push(new am4charts.PieSeries());
+pieSeries_cases.dataFields.value = "amount";
+pieSeries_cases.dataFields.category = "class";
+pieSeries_cases.slices.template.stroke = am4core.color("#fff");
+pieSeries_cases.slices.template.strokeOpacity = 1;
+
+
+// This creates initial animation
+pieSeries_cases.hiddenState.properties.opacity = 1;
+pieSeries_cases.hiddenState.properties.endAngle = -90;
+pieSeries_cases.hiddenState.properties.startAngle = -90;
+pieSeries_cases.labels.template.fontSize = 10;
+chart_cases.hiddenState.properties.radius = am4core.percent(0);
+chart_cases.exporting.menu = new am4core.ExportMenu();
+{% endif %}
+}); // end am4core.ready()
+{% endautoescape %}
+</script>
+{% endblock %}

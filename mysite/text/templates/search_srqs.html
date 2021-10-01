@@ -1,0 +1,15 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+  <form method="get">
+    {{ filter.form.as_p }}
+    <button type="submit">Search</button>
+  </form>
+    <a class="btn btn-danger  float-right romance upanddown" href="{% url 'export_search_srqs_xls' %}">Export Summary Data</a>
+
+  <ul>
+  {% for result in filter.qs %}
+    <li>{{ result.sr_number }} - {{ result.errorCode }}  - {{ result.internalNotes}}</li>
+  {% endfor %}
+  </ul>
+{% endblock %}

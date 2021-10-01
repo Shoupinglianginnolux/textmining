@@ -1,0 +1,268 @@
+{% extends 'base_generic.html' %}
+{% block head %}
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+{% endblock head %}
+{% block navbar %}
+{% include 'includes/historical_tab.html' %}
+{% endblock navbar %}
+{% block content %}
+<div id="root">
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+            <div class="card" style="width: 100%;">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab">
+                            <a class="nav-item nav-link " id="nav-home-tab" href={% url 'defect_classification' %}
+                                aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                            <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'model_keyword' %}
+                                aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                            <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'osr' %}
+                                aria-controls="nav-osr" aria-selected="true">Onsite Repair</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                            aria-labelledby="nav-home-tab">
+                            <div class="row">
+                                <div class="col-2">
+                                    <nav class="nav justify-content-center">
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_dashboard' %}">自動判定結果</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr' %}">F2 Score Trend</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_trend' %}">料件使用分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_usage' %}">使用比例分佈</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_unusual' %}">單一料件分佈</a>
+                                        <a class="btn btn-outline-info btn-block active my-2"
+                                            style="white-space: normal;" href="{% url 'osr_distribution' %}">預測實際分析</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_value_graph' %}">料件費用管理</a>
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_search' %}">預測用料查詢</a>
+                                        {% load poll_extras %}
+                                        {% if request.user|has_group:"RMA" %}
+                                        <a class="btn btn-outline-info btn-block my-2" style="white-space: normal;"
+                                            href="{% url 'osr_maintain' %}">資料維護</a>
+                                        {% endif %}
+                                    </nav>
+                                </div>
+                                <div class="col-10">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Please enter search conditions</h5>
+                                            <form action="" method="get">
+                                                <div class="row">
+                                                    <div class="col-sm-6">
+                                                        <label for="{{ filter.form.start_date.id_for_label }}"
+                                                            class='addRedStar'>Start Date</label><br>
+                                                        {% if not search_type %}
+                                                        {{ filter.form.start_date }}
+                                                        <small class="form-text text-muted">Either select from calendar or input in YYYY-MM-DD format</small>
+                                                        {% else %}
+                                                        {{ request.GET.start_date }}
+                                                        {% endif %}
+                                                        <br />
+                                                        <label for="data_source">Part 名稱</label><br />
+                                                        {% if search_type == 'part_only' or search_type == 'both' %}
+
+                                                        {% for i in part_name %}
+                                                        {{ i | title }}
+                                                        {% endfor %}
+
+                                                        {% elif search_type == 'machine_model_only' %}
+                                                        <p>All Parts</p>
+                                                        {% else %}
+                                                        <select class="form-control w-100" name="part_name"
+                                                            id="part_name" @change=partOnChange() multiple required>
+                                                            {% for part in all_parts_list %}
+                                                            <option value="{{part}}">{{part}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <small class="form-text text-muted">Hold down the ctrl button to
+                                                            select multiple options</small>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <label for="{{ filter.form.end_date.id_for_label }}"
+                                                            class='addRedStar'>End Date</label><br>
+                                                        {% if not search_type %}
+                                                        {{ filter.form.end_date }}
+                                                        <small class="form-text text-muted">Either select from calendar or input in YYYY-MM-DD format</small>
+                                                        {% else %}
+                                                        {{ request.GET.end_date }}
+                                                        {% endif %}
+                                                        <br />
+                                                        <label
+                                                            for="{{ filter.form.machine_model.id_for_label }}">客戶機種</label><br>
+                                                        {% if search_type == 'machine_model_only' or search_type == 'both' %}
+
+                                                        {% for i in machine_model %}
+                                                        {{ i | title }}
+                                                        {% endfor %}
+                                                        {% elif search_type == 'part_only' %}
+                                                        <p>All Parts</p>
+                                                        {% else %}
+                                                        <select class="form-control w-100" name="machine_model"
+                                                            id="machine_model" multiple required
+                                                            @change=customerMachineModelSelectedChange()>
+                                                            {% for model in all_models_list %}
+                                                            <option value="{{model}}">{{model}}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <small class="form-text text-muted">Hold down the ctrl button to
+                                                            select
+                                                            multiple options</small>
+                                                        {% endif %}
+                                                        <br>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col">
+
+                                                        <a type="reset" class="btn btn-danger" href="{% url 'osr_distribution' %}">Clean</a>
+                                                        {% if not search_type %}
+                                                        <button type="submit" class="btn btn-primary ">Submit</button>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% if graph_data %}
+                                <div class="card" id="result">
+                                    <div class="card-body">
+                                        <h4 class="card-title">預測實際分析</h4>
+                                        <div class="right">
+                                            <a class="btn btn-danger mx-2" href="{% url 'export_osr_distribution_search_result' %}" role="button">Export Summary Data</a>
+                                        </div>
+                                        <div class="row mt-5">
+                                            <div class="col-6">
+                                               <!-- graph for predict -->
+                                               <h6 class="text-center">Predict</h6>
+                                                <div style="width:100%;height:300px" id="chartdiv">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <!-- graph for actual -->
+                                                <h6 class="text-center">Actual</h6>
+                                                 <div style="width:100%;height:300px" id="chartdiv_sent">
+                                                 </div>
+                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% elif error_msg %}
+                                <div class="card  light-orange">
+                                    <div class="card-body">
+                                    <h4 class="card-title">{{error_msg}}</h4>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">One machine model, multiple parts</li>
+                                        <li class="list-group-item">One part, multiple machine models</li>
+                                        <li class="list-group-item">Multiple machine models, multiple parts</li>
+                                    </ul>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $("#dt1").datepicker({
+            dateFormat: "yy-mm-dd",
+            minDate: "2018-11-01",
+            onSelect: function (date) {
+                var dt2 = $('#dt2');
+                var startDate = $(this).datepicker('getDate');
+                var minDate = $(this).datepicker('getDate');
+                dt2.datepicker('setDate', minDate);
+                startDate.setDate(startDate.getDate() + 730);
+                minDate.setDate(minDate.getDate() + 1);
+                //sets dt2 maxDate to the last day of 730 days window
+                dt2.datepicker('option', 'maxDate', startDate);
+                dt2.datepicker('option', 'minDate', minDate);
+            }
+        });
+        $('#dt2').datepicker({
+            dateFormat: "yy-mm-dd"
+        });
+    });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous"></script>
+{% autoescape off %}
+{% load static %}
+<script src={% static 'javascript/core.js' %}></script>
+<script src={% static 'javascript/charts.js' %}></script>
+<script src={% static 'javascript/animated.js' %}></script>
+
+<script>
+    am4core.useTheme(am4themes_animated);
+    var app = new Vue({
+        el: '#root',
+        delimiters: ['[[', ']]'],
+        data: {
+            btnText: "隐藏",
+            isShow: false,
+            info: null
+        },
+        methods: {
+        },
+        mounted() {
+            // Sent pie
+            let chart_sent = am4core.create("chartdiv_sent", am4charts.PieChart);
+
+            // Add data
+            chart_sent.data = {{ graph_data|safe}};
+
+            // Add and configure Series
+            let pieSeries_sent = chart_sent.series.push(new am4charts.PieSeries());
+            pieSeries_sent.dataFields.value = "litres";
+            pieSeries_sent.dataFields.category = "country";
+            pieSeries_sent.slices.template.stroke = am4core.color("#fff");
+            pieSeries_sent.slices.template.strokeOpacity = 1;
+            pieSeries_sent.labels.template.disabled = true;
+            // This creates initial animation
+            pieSeries_sent.hiddenState.properties.opacity = 1;
+            pieSeries_sent.hiddenState.properties.endAngle = -90;
+            pieSeries_sent.hiddenState.properties.startAngle = -90;
+
+            chart_sent.hiddenState.properties.radius = am4core.percent(0);
+            chart_sent.exporting.menu = new am4core.ExportMenu();
+
+            let chart_predict = am4core.create("chartdiv", am4charts.PieChart);
+
+            // predict pie
+            chart_predict.data = {{ graph_data_predict|safe}};
+
+            // Add and configure Series
+            let pieSeries_predict = chart_predict.series.push(new am4charts.PieSeries());
+            pieSeries_predict.dataFields.value = "litres";
+            pieSeries_predict.dataFields.category = "country";
+            pieSeries_predict.slices.template.stroke = am4core.color("#fff");
+            pieSeries_predict.slices.template.strokeOpacity = 1;
+            pieSeries_predict.labels.template.disabled = true;
+            // This creates initial animation
+            pieSeries_predict.hiddenState.properties.opacity = 1;
+            pieSeries_predict.hiddenState.properties.endAngle = -90;
+            pieSeries_predict.hiddenState.properties.startAngle = -90;
+
+            chart_predict.hiddenState.properties.radius = am4core.percent(0);
+            chart_predict.exporting.menu = new am4core.ExportMenu();
+        },
+
+    })
+</script>
+{% endautoescape %}
+
+{% endblock  %}

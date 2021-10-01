@@ -1,0 +1,96 @@
+{% extends 'base_generic.html' %}
+
+{% block navbar %}
+<div class="row">
+    <div class="col-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'test' %} role="tab" aria-controls="model_eval"
+                    aria-selected="false">Latest Model</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'defect_classification' %} role="tab" aria-controls="defect"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+{% endblock navbar %}
+
+
+{% block content %}
+<div class="card" style="width: 100%;">
+    <div class="card-body">
+        <h5 class="card-title">Data Upload</h5>
+        <div class="form-group right">
+            <form action={% url 'onsite_repair' %} method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="file" class="form-control-file" name="myfile" id="myfile"
+                            placeholder="Choose a file" required>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-secondary  float-right romance" data-toggle="modal">Update
+                            Keyword</button>
+                        <button type="submit" class="btn btn-primary  float-right romance">Update Data</button>
+                        <button type="reset" class="btn btn-danger  float-right romance"
+                            vOnClick="this.form.reset()">Clean</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% if page_obj %}
+
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show active" id="model_eval" role="tabpanel" aria-labelledby="model_eval-tab">
+        <div class="card" style="width: 100%;">
+            <div class="card-body">
+                <nav>
+                    <div class="nav nav-tabs" id="nav-tab">
+                        <a class="nav-item nav-link " id="nav-home-tab" href={% url 'model_classification' %}
+                            aria-controls="nav-home" aria-selected="false">ErrorCode Classification</a>
+                        <a class="nav-item nav-link" id="nav-keyword-tab" href={% url 'keyword_summary' %}
+                            aria-controls="nav-keyword" aria-selected="false">Keyword Summary</a>
+                        <a class="nav-item nav-link active" id="nav-osr-tab" href={% url 'onsite_repair' %}
+                            aria-controls="nav-osr" aria-selected="true">On-Site Repair</a>
+                    </div>
+                </nav>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                        <div class="card" style="width: 100%;">
+                            <div class="card-body">
+                                <div class="row bg-warning ">
+                                    <div class="col-sm">
+                                        <h6 class="putinmiddle">Phase 3 page. Coming soon...</h6>
+                                        <!-- <h6 class="putinmiddle">Latest Model’s Accuracy: {{result.accuracy}} (Update
+                                                date: 6/1)</h6> -->
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <a class="btn btn-danger float-right romance upanddown" href="{% url 'export_onsite_summary_data' %}">Export
+                                                Summary Data</a>
+                                            <a class="btn btn-danger float-right romance upanddown"
+                                                href="{% url 'export_onsite_error_data' %}">Export Error Data</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock content %}

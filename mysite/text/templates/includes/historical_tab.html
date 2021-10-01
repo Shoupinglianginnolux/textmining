@@ -1,0 +1,32 @@
+
+<div class="row">
+    <div class="col-9">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            {% load poll_extras %}
+            {% if request.user|has_group:"RMA" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'test' %} aria-controls="model_eval" aria-selected="defect">Latest
+                    Model</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link active" href={% url 'defect_classification' %} aria-controls="true"
+                    aria-selected="false">Historical Data Search</a>
+            </li>
+            {% if request.user|has_group:"CQE_admin" %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'cqe_configuration' %} role="tab" aria-controls="defect"
+                    aria-selected="false">CQE Configuration</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href={% url 'user_manual' %} aria-selected="false">User Manual</a>
+            </li>
+
+        </ul>
+    </div>
+    <div class="col-3 right">
+        {% include 'includes/user_setting_btn.html' %}
+    </div>
+</div>
+

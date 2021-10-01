@@ -1,0 +1,63 @@
+{% extends 'base_generic.html' %}
+
+{% block content %}
+
+<div class="container content">
+  <br>
+  <br>
+  <div class="row">
+    <form method="post" class="post-form">
+      {% csrf_token %}
+  
+    <h1>申請權限人員</h1>
+  </div>
+  <div class="row" hidden>
+    {{ form.employee_id.label }}：{{ form.employee_id }}  
+  </div>
+  <div class="row">
+    <p>工號：{{ employee_id }}</p>  
+  </div>
+  
+  <div class="row">
+    <p id="msg" class="text-danger"></p>
+  </div>
+  <div class="row">
+    <p >姓名： <span id="employee_name">{{employee_name}}</span></p>
+    
+  </div>
+    <div class="row">
+    <h1>申請原因：</h1>
+    </div>
+    <div class="row">
+        {{ form.reason }}
+    </div>
+    
+  <div class="row">
+
+  </div>
+  <div class="row">
+    <button type="submit" class="btn btn-primary" disabled="disabled" id="submit_btn">Apply</button>
+    </form>
+  </div>
+</div>
+
+{% if employee_id %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+{% endif %}
+<script>
+  $(document).ready(function () {
+    {% if employee_id %}
+    $('#id_employee_id').val( {{employee_id}} );
+    $(document).on('change', '#id_reason', function(e) {
+    var cur_value = $("#id_reason").val();
+    console.log(cur_value);
+    if (cur_value != "") 
+          $('#submit_btn').removeAttr('disabled');
+    });
+    
+  });
+   {% endif %}
+
+</script>
+
+{% endblock  %}
